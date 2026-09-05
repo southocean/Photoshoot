@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fantasy Shoot — Mood Board</title>
+<link rel="stylesheet" href="assets/board.css">
+</head>
+<body>
+
+<header>
+  <h1 id="title">Mood board</h1>
+  <p class="sub" id="subtitle"></p>
+
+  <div class="toolbar" id="chips"></div>
+
+  <div class="toolbar" style="margin-top:10px">
+    <button id="t-group" aria-pressed="true">Group by concept</button>
+    <button id="t-starred" aria-pressed="false">★ Shortlist only</button>
+    <button id="t-add">+ Add images</button>
+    <span class="spacer"></span>
+    <button id="t-collab">Link a shared board…</button>
+    <button id="t-export">Export</button>
+    <button id="t-import">Import</button>
+    <button id="t-reset">Reset</button>
+    <input type="file" id="t-add-file" accept="image/*" multiple hidden>
+    <input type="file" id="t-import-file" accept="application/json,.json" hidden>
+  </div>
+</header>
+
+<div class="palettes" id="palettes"></div>
+
+<main>
+  <div id="board"></div>
+
+  <div class="dropzone">
+    Drag image files anywhere on this page to add them to the board.<br>
+    Drag cards to rearrange · click to open and zoom · ★ to shortlist · notes save in this browser.
+  </div>
+</main>
+
+<div class="lb" id="lb" hidden>
+  <div class="lb-stage" id="lb-stage">
+    <img id="lb-img" alt="">
+    <button class="lb-nav prev" id="lb-prev" title="Previous (←)">‹</button>
+    <button class="lb-nav next" id="lb-next" title="Next (→)">›</button>
+    <div class="lb-zoombar">
+      <button id="lb-out" title="Zoom out (−)">−</button>
+      <span id="lb-zoom-label">100%</span>
+      <button id="lb-in" title="Zoom in (+)">+</button>
+      <button id="lb-reset" title="Fit (0)">Fit</button>
+    </div>
+  </div>
+
+  <aside class="lb-side">
+    <button class="lb-close" id="lb-close" title="Close (Esc)">Close ✕</button>
+    <h2 id="lb-title"></h2>
+    <div class="src" id="lb-src"></div>
+
+    <button id="lb-star" aria-pressed="false">☆ Shortlist</button>
+
+    <h4>What to steal</h4>
+    <p id="lb-steal"></p>
+
+    <h4>What to change for Sweden</h4>
+    <p id="lb-change"></p>
+
+    <h4 hidden>Tags</h4>
+    <div class="tags" id="lb-tags"></div>
+
+    <h4>Our notes</h4>
+    <textarea id="lb-note" placeholder="What do we actually want from this one? Wardrobe, location, who it suits…"></textarea>
+    <p class="hint">Scroll or double-click the image to zoom, drag to pan. ← → to move, S to shortlist, Esc to close.</p>
+  </aside>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/board.js"></script>
+</body>
+</html>

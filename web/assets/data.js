@@ -135,18 +135,16 @@ window.DEFAULT_BOARD = {
   /* Stickers sit on top of the grid rather than in it, so they're placed by
      fraction of the board once the photos have been arranged. */
   stickers: [
-    /* anchor pins each one to a photo's corner — the junction where items meet —
-       so it sits on the layout and covers corners, not faces. */
-    { sticker: "pumpkin",    anchor: { img: "17", corner: "nw", dx: 72, dy: 44 },
-      w: 148, h: 126, rot: -5 },
-    { sticker: "maple-gold", anchor: { img: "11", corner: "ne", dx: -8, dy: 10 },
-      w: 112, h: 155, rot: 24 },
-    { sticker: "maple-red",  anchor: { img: "18", corner: "sw", dx: 14, dy: 6 },
-      w: 138, h: 162, rot: -34, flipY: true },
-    /* rot 96 rather than 128: mirrored, 128 read as near-parallel to the leaf above */
-    { sticker: "maple-gold", anchor: { img: "01", corner: "ne", dx: -6, dy: 8 },
-      w: 94, h: 130, rot: 96, flipY: true },
-    { sticker: "rowan",      anchor: { img: "23", corner: "se", dx: -10, dy: -8 },
+    /* Adopted from an exported board — regenerate with tools/adopt-stickers.js */
+    { sticker: "pumpkin", anchor: { img: "17", corner: "sw", dx: 53, dy: -40 },
+      w: 138, h: 118, rot: -5 },
+    { sticker: "maple-gold", anchor: { img: "11", corner: "ne", dx: -12, dy: 20 },
+      w: 104, h: 144, rot: 24 },
+    { sticker: "maple-red", anchor: { img: "18", corner: "sw", dx: -6, dy: 1 },
+      w: 116, h: 136, rot: -15, flipY: true },
+    { sticker: "maple-gold", anchor: { img: "01", corner: "ne", dx: -1, dy: 30 },
+      w: 94, h: 130, rot: 165, flipY: true },
+    { sticker: "rowan", anchor: { img: "23", corner: "se", dx: -10, dy: -8 },
       w: 130, h: 134, rot: 14 }
   ]
 };

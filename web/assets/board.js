@@ -39,9 +39,11 @@
     wireDrop();
     wireCropper();
     wireTrayGrip();
+    wireViews();
 
     load();
     applyTray();
+    setView(view);
     preloadAll().then(function () {
       if (!doc) {
         doc = { boards: [buildDefault()], active: 0 };
@@ -99,15 +101,19 @@
   }
 
   function save() {
+    if (!doc) return;
     try {
       localStorage.setItem(KEY, JSON.stringify({
         doc: doc,
         uploads: lib.filter(function (p) { return p.local; }),
-        ui: { trayW: trayW, trayCollapsed: trayCollapsed }
+        ui: { trayW: trayW, trayCollapsed: trayCollapsed, view: view }
       }));
     } catch (e) {
-      toast("Could not save — browser storage is full. Export the board to keep it.");
+      toast("Could not save — browser storage is full. Delete a photo from the tray, or export the board.");
     }
+    // Always after the write: callers do render() then save(), so a meter drawn
+    // during render() would be reporting the previous state.
+    renderMeter();
   }
 
   function load() {
@@ -118,6 +124,7 @@
       if (p.ui) {
         if (p.ui.trayW) trayW = clampTray(p.ui.trayW);
         trayCollapsed = !!p.ui.trayCollapsed;
+        if (p.ui.view) view = p.ui.view;
       }
       if (p.uploads && p.uploads.length) {
         p.uploads.forEach(function (u) { if (!libOf(u.key)) lib.push(u); });
@@ -553,6 +560,37 @@
   }
 
   /* ============================ toolbar ============================ */
+
+  /* ---- views: the board, and the research behind it ---- */
+
+  var view = "board";
+
+  function setView(v) {
+    view = v;
+    var research = v === "research";
+
+    document.getElementById("body").hidden = research;
+    document.getElementById("research").hidden = !research;
+    document.getElementById("pagebar-wrap").hidden = research;
+    document.getElementById("board-tools").hidden = research;
+
+    document.getElementById("view-board-tab").classList.toggle("on", !research);
+    document.getElementById("view-research-tab").classList.toggle("on", research);
+
+    // setView also runs at boot, before the board is loaded — guard both calls.
+    if (research) {
+      actions.hidden = true;
+    } else if (board) {
+      fitZoom();
+      placeActions();
+    }
+    if (doc) save();
+  }
+
+  function wireViews() {
+    document.getElementById("view-board-tab").onclick = function () { setView("board"); };
+    document.getElementById("view-research-tab").onclick = function () { setView("research"); };
+  }
 
   /* ---- photo tray: collapse and resize ---- */
 

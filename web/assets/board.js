@@ -1022,6 +1022,10 @@
           var p = JSON.parse(r.result);
           if (!p.board || !p.board.items) throw 0;
           snapshot();
+          // write into the slot, not just the local alias — otherwise the next
+          // save serialises the board this replaced
+          p.board.items.forEach(function (it) { uid = Math.max(uid, it.id || 0, it.z || 0); });
+          doc.boards[doc.active] = p.board;
           board = p.board;
           (p.uploads || []).forEach(function (u) { if (!libOf(u.key)) lib.push(u); });
           sel = null; render(); refit(); save();
@@ -1225,7 +1229,9 @@
     var node = page.querySelector('.item[data-id="' + it.id + '"]');
     drag(function (e2) {
       var p = pagePoint(e2);
-      var a = Math.atan2(p.y - cy, p.x - cx) * 180 / Math.PI + 90;
+      /* The handle sits at the top of the unflipped box, so a vertical flip
+         renders it at the bottom — without this the drag runs backwards. */
+      var a = Math.atan2(p.y - cy, p.x - cx) * 180 / Math.PI + (it.flipY ? -90 : 90);
       if (!e2.altKey) a = Math.round(a / 15) * 15;
       it.rot = Math.round(a);
       if (node) node.style.transform = ("rotate(" + it.rot + "deg) ") +
@@ -1277,6 +1283,8 @@
 
     /* Controls only — the photo's name and id are drawn on the photo itself. */
     if (it.kind === "sticker") {
+      actions.appendChild(btn("↺", function () { nudgeRot(it, -15); }, "Rotate 15° left"));
+      actions.appendChild(btn("↻", function () { nudgeRot(it, 15); }, "Rotate 15° right"));
       actions.appendChild(btn("⇄", function () {
         snapshot(); it.flipX = !it.flipX; render(); save();
       }, "Flip horizontally", !!it.flipX));
@@ -1332,6 +1340,12 @@
       b.onclick = fn;
       return b;
     }
+  }
+
+  function nudgeRot(it, by) {
+    snapshot();
+    it.rot = Math.round((((it.rot || 0) + by) % 360 + 360) % 360);
+    render(); save();
   }
 
   function duplicate(it) {
@@ -1569,6 +1583,7 @@
 
       if (mod && e.key.toLowerCase() === "d") { e.preventDefault(); duplicate(it); return; }
       if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); remove(it); return; }
+      if (e.key === "r" || e.key === "R") { e.preventDefault(); nudgeRot(it, e.shiftKey ? -15 : 15); return; }
       if (e.key === "Escape") { select(null); return; }
       if (e.key === "]") { snapshot(); it.z = topZ() + 1; render(); save(); return; }
       if (e.key === "[") {

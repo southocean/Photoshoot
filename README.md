@@ -59,3 +59,19 @@ This board is static, so your friends cannot edit the same copy. **Use a shared 
 - [ ] Book model + wardrobe rental
 - [ ] Landing page (hosting still being decided)
 - [ ] Run the five validation tests
+
+---
+
+## Adopting a board arrangement
+
+Rearrange the stickers in the browser, hit **Export**, then:
+
+```bash
+node tools/adopt-stickers.js ~/Downloads/moodboard-YYYY-MM-DD.json
+```
+
+That rewrites the `stickers` block in `web/assets/data.js` so your arrangement
+becomes the shipped default. Positions are re-expressed as an anchor on the
+nearest photo corner rather than absolute pixels, so they survive the masonry
+re-flowing when photos are added or the canvas preset changes; anything not near
+a corner falls back to a fraction of the board.

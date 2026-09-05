@@ -4,76 +4,91 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Fantasy Shoot — Mood Board</title>
+<title>Skogsälva — Mood Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/board.css">
 </head>
 <body>
 
-<header>
-  <h1 id="title">Mood board</h1>
-  <p class="sub" id="subtitle"></p>
+<div id="app">
 
-  <div class="toolbar" id="chips"></div>
+  <div id="bar">
+    <span class="brand">Skogs<em>älva</em></span>
 
-  <div class="toolbar" style="margin-top:10px">
-    <button id="t-group" aria-pressed="true">Group by concept</button>
-    <button id="t-starred" aria-pressed="false">★ Shortlist only</button>
-    <button id="t-add">+ Add images</button>
-    <span class="spacer"></span>
-    <button id="t-collab">Link a shared board…</button>
-    <button id="t-export">Export</button>
-    <button id="t-import">Import</button>
-    <button id="t-reset">Reset</button>
-    <input type="file" id="t-add-file" accept="image/*" multiple hidden>
-    <input type="file" id="t-import-file" accept="application/json,.json" hidden>
+    <button id="toggle-tray" class="on" title="Show or hide the photo tray">Photos</button>
+
+    <span class="sep"></span>
+
+    <button id="add-text" title="Add a text block">+ Text</button>
+    <button id="add-swatch" title="Add a colour palette">+ Palette</button>
+    <button id="arrange" title="Tidy everything into a grid">Auto-arrange</button>
+
+    <span class="sep"></span>
+
+    <button id="undo" class="ghost" title="Undo (Ctrl+Z)">↶</button>
+    <button id="redo" class="ghost" title="Redo (Ctrl+Shift+Z)">↷</button>
+
+    <span class="sep"></span>
+    <span class="grounds" id="grounds" title="Board background"></span>
+
+    <span class="grow"></span>
+
+    <span class="zoom">
+      <button id="zout" class="ghost" title="Zoom out">−</button>
+      <span id="zlabel">100%</span>
+      <button id="zin" class="ghost" title="Zoom in">+</button>
+      <button id="zfit" class="ghost" title="Fit to window">Fit</button>
+    </span>
+
+    <span class="sep"></span>
+
+    <button id="png" title="Download the board as an image">Download PNG</button>
+    <button id="json" title="Save the board to a file you can send on">Export</button>
+    <button id="import" title="Load a board someone sent you">Import</button>
+    <button id="reset" class="ghost danger" title="Back to the default arrangement">Reset</button>
+
+    <input type="file" id="import-file" accept="application/json,.json" hidden>
+    <input type="file" id="upload-file" accept="image/*" multiple hidden>
   </div>
-</header>
 
-<div class="palettes" id="palettes"></div>
-
-<main>
-  <div id="board"></div>
-
-  <div class="dropzone">
-    Drag image files anywhere on this page to add them to the board.<br>
-    Drag cards to rearrange · click to open and zoom · ★ to shortlist · notes save in this browser.
+  <div id="pagebar-wrap">
+    <span class="pb-label">Boards</span>
+    <div id="pagebar"></div>
+    <span class="grow"></span>
+    <span class="pb-label">Canvas</span>
+    <span id="sizes"></span>
   </div>
-</main>
 
-<div class="lb" id="lb" hidden>
-  <div class="lb-stage" id="lb-stage">
-    <img id="lb-img" alt="">
-    <button class="lb-nav prev" id="lb-prev" title="Previous (←)">‹</button>
-    <button class="lb-nav next" id="lb-next" title="Next (→)">›</button>
-    <div class="lb-zoombar">
-      <button id="lb-out" title="Zoom out (−)">−</button>
-      <span id="lb-zoom-label">100%</span>
-      <button id="lb-in" title="Zoom in (+)">+</button>
-      <button id="lb-reset" title="Fit (0)">Fit</button>
+  <div id="body">
+
+    <aside id="tray">
+      <div class="tray-head">
+        <h2>Photo tray</h2>
+        <p>Click one to drop it on the board.</p>
+      </div>
+      <div class="tray-list" id="tray-list"></div>
+      <div class="tray-foot">
+        <button class="filebtn" id="upload">+ Upload photos</button>
+        <p class="hint">Or drag image files anywhere onto the page.</p>
+      </div>
+    </aside>
+
+    <div id="stage">
+      <div id="scroller">
+        <div id="pagewrap">
+          <div id="page"></div>
+        </div>
+      </div>
     </div>
+
   </div>
-
-  <aside class="lb-side">
-    <button class="lb-close" id="lb-close" title="Close (Esc)">Close ✕</button>
-    <h2 id="lb-title"></h2>
-    <div class="src" id="lb-src"></div>
-
-    <button id="lb-star" aria-pressed="false">☆ Shortlist</button>
-
-    <h4>What to steal</h4>
-    <p id="lb-steal"></p>
-
-    <h4>What to change for Sweden</h4>
-    <p id="lb-change"></p>
-
-    <h4 hidden>Tags</h4>
-    <div class="tags" id="lb-tags"></div>
-
-    <h4>Our notes</h4>
-    <textarea id="lb-note" placeholder="What do we actually want from this one? Wardrobe, location, who it suits…"></textarea>
-    <p class="hint">Scroll or double-click the image to zoom, drag to pan. ← → to move, S to shortlist, Esc to close.</p>
-  </aside>
 </div>
+
+<div id="actions" hidden></div>
+<div id="toast" hidden></div>
+<div id="drop" hidden>Drop photos onto the board</div>
 
 <script src="assets/data.js"></script>
 <script src="assets/board.js"></script>

@@ -94,6 +94,20 @@ window.LIBRARY = [
     note: "Palette card only. It promises something a real shoot can't deliver, and that gap is what makes clients unhappy." }
 ];
 
+/* Stickers — real photographic cut-outs, not drawings. The leaves are herbarium
+   scans keyed off their paper; the pumpkin came already cut out.
+   All from Wikimedia Commons; licences are recorded per sticker. */
+window.STICKERS = [
+  { key: "pumpkin", label: "Pumpkin", src: "images/sticker-pumpkin.png", w: 230, h: 196,
+    credit: "Wikimedia Commons · Orange pumpkin.png · CC BY-SA 3.0" },
+  { key: "maple-gold", label: "Norway maple, gold", src: "images/sticker-maple-gold.png", w: 150, h: 208,
+    credit: "Wikimedia Commons · Acer platanoides 2 RF.jpg · CC BY 4.0" },
+  { key: "maple-red", label: "Norway maple, turning", src: "images/sticker-maple-red.png", w: 170, h: 200,
+    credit: "Wikimedia Commons · Autumn Norway Maple Leaf.jpg · CC BY-SA 3.0" },
+  { key: "rowan", label: "Rowan", src: "images/sticker-rowan.png", w: 170, h: 176,
+    credit: "Wikimedia Commons · Herbarium, Sorbus aucuparia · CC BY-SA 4.0" }
+];
+
 /* Page backgrounds offered in the toolbar. */
 window.GROUNDS = ["#211a13", "#1b2016", "#14170f", "#2f2018", "#ede8d9", "#e5d9c3", "#c8c3a8", "#ffffff"];
 
@@ -121,8 +135,9 @@ window.DEFAULT_BOARD = {
   /* Stickers sit on top of the grid rather than in it, so they're placed by
      fraction of the board once the photos have been arranged. */
   stickers: [
-    { sticker: "pumpkin",     fx: 0.06, fy: 0.30, w: 190, h: 160, rot: -8 },
-    { sticker: "maple-amber", fx: 0.72, fy: 0.09, w: 140, h: 140, rot: 18 },
-    { sticker: "maple-red",   fx: 0.44, fy: 0.63, w: 120, h: 120, rot: -24 }
+    { sticker: "pumpkin",    fx: 0.055, fy: 0.30, w: 230, h: 196, rot: -6 },
+    { sticker: "maple-gold", fx: 0.735, fy: 0.06, w: 150, h: 208, rot: 22 },
+    { sticker: "maple-red",  fx: 0.45,  fy: 0.64, w: 170, h: 200, rot: -28 },
+    { sticker: "rowan",      fx: 0.24,  fy: 0.86, w: 170, h: 176, rot: 12 }
   ]
 };

@@ -433,7 +433,7 @@
     } else if (it.kind === "sticker") {
       var st = document.createElement("div");
       st.className = "sticker";
-      st.innerHTML = stickerOf(it.sticker).svg;
+      st.innerHTML = '<img src="' + stickerOf(it.sticker).src + '" alt="" draggable="false">';
       el.appendChild(st);
 
     } else if (it.kind === "swatch") {
@@ -711,34 +711,10 @@
   }
 
   /* ============================ stickers ============================ */
-  /* Inline SVG so they scale cleanly and cost nothing to ship. Each is a normal
-     board item: movable, resizable, rotatable, deletable, undoable. */
+  /* Photographic cut-outs with a real alpha channel — see data.js for sources
+     and licences. Each is a normal board item: move, resize, rotate, delete. */
 
-  var MAPLE = "M50 8 L57 26 L71 19 L67 34 L87 31 L74 44 L95 53 L74 60 L83 74 L63 70 " +
-              "L65 88 L52 77 L50 96 L48 77 L35 88 L37 70 L17 74 L26 60 L5 53 L26 44 " +
-              "L13 31 L33 34 L29 19 L43 26 Z";
-
-  var STICKERS = [
-    { key: "pumpkin", label: "Pumpkin", w: 190, h: 160, svg:
-      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
-      '<path d="M50 34 C50 24 45 17 38 12" stroke="#6f7c3c" stroke-width="6" fill="none" stroke-linecap="round"/>' +
-      '<path d="M53 33 C62 31 70 25 73 15" stroke="#86934a" stroke-width="4" fill="none" stroke-linecap="round"/>' +
-      '<ellipse cx="50" cy="62" rx="35" ry="29" fill="#c9682a"/>' +
-      '<ellipse cx="33" cy="62" rx="17" ry="28" fill="#dd7f33"/>' +
-      '<ellipse cx="67" cy="62" rx="17" ry="28" fill="#dd7f33"/>' +
-      '<ellipse cx="50" cy="62" rx="12" ry="29" fill="#eb9a46"/>' +
-      '<path d="M50 33 L50 40" stroke="#5c6733" stroke-width="7" stroke-linecap="round"/></svg>' },
-
-    { key: "maple-amber", label: "Maple leaf", w: 150, h: 150, svg:
-      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
-      '<path d="' + MAPLE + '" fill="#d99331"/>' +
-      '<path d="M50 96 L50 62" stroke="#a9702a" stroke-width="3" stroke-linecap="round"/></svg>' },
-
-    { key: "maple-red", label: "Maple leaf, red", w: 150, h: 150, svg:
-      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
-      '<path d="' + MAPLE + '" fill="#b04627"/>' +
-      '<path d="M50 96 L50 62" stroke="#7d3220" stroke-width="3" stroke-linecap="round"/></svg>' }
-  ];
+  var STICKERS = window.STICKERS || [];
 
   function stickerOf(key) {
     for (var i = 0; i < STICKERS.length; i++) if (STICKERS[i].key === key) return STICKERS[i];
@@ -768,7 +744,7 @@
       b.type = "button";
       b.title = s.label;
       b.setAttribute("aria-label", "Add " + s.label);
-      b.innerHTML = s.svg;
+      b.innerHTML = '<img src="' + s.src + '" alt="">';
       b.onclick = function () { pop.hidden = true; addSticker(s.key); };
       pop.appendChild(b);
     });
@@ -1695,7 +1671,7 @@
           var p = libOf(it.img);
           src = p ? p.src : null;
         } else if (it.kind === "sticker") {
-          src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(stickerOf(it.sticker).svg);
+          src = stickerOf(it.sticker).src;
         }
         if (!src) return null;
         return new Promise(function (res) {

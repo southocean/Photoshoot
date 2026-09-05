@@ -99,7 +99,7 @@ body {
   padding: 5px 14px; border-radius: 999px;
   background: none; border-color: var(--lichen); color: var(--ash);
 }
-.idea:hover:not(.on) { color: var(--birch); background: var(--humus-hi); }
+.idea:hover:not(.on) { color: var(--birch); background: var(--humus-hi); border-color: var(--lichen); }
 .idea.on { background: var(--birch); border-color: var(--birch); color: #14170f; font-weight: 500; }
 
 .toclink {
@@ -279,13 +279,17 @@ button, .filebtn {
   white-space: nowrap;
   transition: background .13s, border-color .13s, color .13s, opacity .13s;
 }
-button:hover:not(:disabled), .filebtn:hover { background: #2e3524; border-color: #4c5739; }
+/* :not(.on) on every hover rule is deliberate. Without it these outrank the
+   active-state rules on specificity, repaint an active button's background dark
+   and leave its near-black text unreadable — which it did, three times. */
+button:hover:not(:disabled):not(.on), .filebtn:hover { background: #2e3524; border-color: #4c5739; }
 button:disabled { opacity: .35; cursor: default; }
 button.on { background: var(--moss); border-color: var(--moss); color: #14170f; font-weight: 600; }
+button.on:hover:not(:disabled) { filter: brightness(1.08); }
 button.ghost { background: none; border-color: transparent; }
-button.ghost:hover { background: var(--humus-hi); border-color: var(--lichen); }
-/* .ghost is declared after .on at equal specificity, so it would strip the fill
-   from an active ghost button and leave near-black text on a dark ground. */
+button.ghost:hover:not(.on) { background: var(--humus-hi); border-color: var(--lichen); }
+/* …and .ghost sits after .on at equal specificity, so an active ghost button
+   needs the fill restated or it keeps near-black text on no background. */
 button.ghost.on { background: var(--moss); border-color: var(--moss); color: #14170f; }
 button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 
@@ -436,7 +440,7 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 }
 
 .item .sticker { width: 100%; height: 100%; }
-.item .sticker svg { width: 100%; height: 100%; display: block; }
+.item .sticker img { width: 100%; height: 100%; display: block; object-fit: contain; -webkit-user-drag: none; }
 
 /* name + id, shown on the photo itself while it is selected */
 .idlabel {
@@ -502,12 +506,12 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 }
 #stickers[hidden] { display: none; }
 #stickers button {
-  width: 52px; height: 52px; padding: 5px;
+  width: 58px; height: 58px; padding: 6px;
   display: grid; place-items: center;
   background: var(--bark); border-radius: 8px;
 }
 #stickers button:hover { border-color: var(--moss); }
-#stickers svg { width: 100%; height: 100%; }
+#stickers img { width: 100%; height: 100%; object-fit: contain; }
 #actions input[type="color"] {
   width: 28px; height: 26px; padding: 0; border: 1px solid var(--lichen);
   border-radius: 5px; background: none; cursor: pointer;

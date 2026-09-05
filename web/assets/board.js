@@ -15,6 +15,8 @@
   var doc = null;        // { boards: [...], active: n } — one board per look
   var board = null;      // shorthand for doc.boards[doc.active]
   var zoom = 1, sel = null, uid = 0;
+  var TRAY_MIN = 150, TRAY_MAX = 560, TRAY_DEFAULT = 218;
+  var trayW = TRAY_DEFAULT, trayCollapsed = false;
   var undoStack = [], redoStack = [];
   var downloads = null;
   var natural = {};      // key -> [w, h]
@@ -36,8 +38,10 @@
     wireKeys();
     wireDrop();
     wireCropper();
+    wireTrayGrip();
 
     load();
+    applyTray();
     preloadAll().then(function () {
       if (!doc) {
         doc = { boards: [buildDefault()], active: 0 };
@@ -98,7 +102,8 @@
     try {
       localStorage.setItem(KEY, JSON.stringify({
         doc: doc,
-        uploads: lib.filter(function (p) { return p.local; })
+        uploads: lib.filter(function (p) { return p.local; }),
+        ui: { trayW: trayW, trayCollapsed: trayCollapsed }
       }));
     } catch (e) {
       toast("Could not save — browser storage is full. Export the board to keep it.");
@@ -110,6 +115,10 @@
       var raw = localStorage.getItem(KEY);
       if (!raw) return;
       var p = JSON.parse(raw);
+      if (p.ui) {
+        if (p.ui.trayW) trayW = clampTray(p.ui.trayW);
+        trayCollapsed = !!p.ui.trayCollapsed;
+      }
       if (p.uploads && p.uploads.length) {
         p.uploads.forEach(function (u) { if (!libOf(u.key)) lib.push(u); });
       }
@@ -427,6 +436,9 @@
 
     trayList.innerHTML = "";
     lib.forEach(function (p) {
+      var wrap = document.createElement("div");
+      wrap.className = "tile-wrap";
+
       var b = document.createElement("button");
       b.className = "tile" + (used[p.key] ? " used" : "");
       b.type = "button";
@@ -446,8 +458,52 @@
       b.appendChild(n);
 
       b.onclick = function () { addPhoto(p.key); };
-      trayList.appendChild(b);
+      wrap.appendChild(b);
+
+      if (p.local) {
+        var kill = document.createElement("button");
+        kill.className = "kill";
+        kill.type = "button";
+        kill.textContent = "✕";
+        kill.title = "Delete this photo and free its storage";
+        kill.setAttribute("aria-label", "Delete " + p.title + " from the tray");
+        kill.onclick = function (e) { e.stopPropagation(); deleteUpload(p); };
+        wrap.appendChild(kill);
+      }
+
+      trayList.appendChild(wrap);
     });
+  }
+
+  /* Deleting an upload also has to take it off every board — otherwise the item
+     survives pointing at a photo that no longer exists and renders as a blank box. */
+  function deleteUpload(p) {
+    var onBoards = doc.boards.filter(function (b) {
+      return b.items.some(function (it) { return it.kind === "photo" && it.img === p.key; });
+    });
+
+    var msg = "Delete “" + p.title + "” and free its storage?";
+    if (onBoards.length) {
+      msg += "\n\nIt is used on " + onBoards.length + " board" + (onBoards.length > 1 ? "s" : "") +
+             " (" + onBoards.map(function (b) { return b.name; }).join(", ") + ") and will be removed from " +
+             (onBoards.length > 1 ? "those too" : "that too") + ".";
+    }
+    msg += "\n\nThis cannot be undone by Ctrl+Z — export the board first if you want it back.";
+    if (!confirm(msg)) return;
+
+    doc.boards.forEach(function (b) {
+      b.items = b.items.filter(function (it) { return !(it.kind === "photo" && it.img === p.key); });
+    });
+    lib = lib.filter(function (x) { return x.key !== p.key; });
+    delete natural[p.key];
+    if (sel != null && !itemById(sel)) sel = null;
+
+    undoStack.length = 0;
+    redoStack.length = 0;
+    syncUndo();
+
+    render(); save();
+    toast("Deleted “" + p.title + "”.");
   }
 
   /* Uploaded photos live in localStorage as base64 text, and that has a hard
@@ -498,10 +554,59 @@
 
   /* ============================ toolbar ============================ */
 
+  /* ---- photo tray: collapse and resize ---- */
+
+  function clampTray(w) { return Math.max(TRAY_MIN, Math.min(TRAY_MAX, Math.round(w))); }
+
+  function applyTray() {
+    tray.style.width = (trayCollapsed ? 0 : trayW) + "px";
+    tray.classList.toggle("collapsed", trayCollapsed);
+    var t = document.getElementById("toggle-tray");
+    if (t) t.classList.toggle("on", !trayCollapsed);
+  }
+
+  function wireTrayGrip() {
+    var grip = document.getElementById("tray-grip");
+
+    grip.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      var x0 = e.clientX, w0 = trayW;
+      grip.classList.add("dragging");
+      // capture is a nicety, not a requirement — never let it abort the drag
+      try { grip.setPointerCapture(e.pointerId); } catch (err) {}
+
+      function move(e2) {
+        trayW = clampTray(w0 + (e2.clientX - x0));
+        applyTray();
+      }
+      function up() {
+        grip.classList.remove("dragging");
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        fitZoom(); placeActions(); save();
+      }
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+    });
+
+    grip.addEventListener("dblclick", function () {
+      trayW = TRAY_DEFAULT;
+      applyTray(); fitZoom(); placeActions(); save();
+    });
+
+    grip.addEventListener("keydown", function (e) {
+      var d = e.key === "ArrowLeft" ? -16 : e.key === "ArrowRight" ? 16 : 0;
+      if (!d) return;
+      e.preventDefault();
+      trayW = clampTray(trayW + d);
+      applyTray(); fitZoom(); placeActions(); save();
+    });
+  }
+
   function wireToolbar() {
     document.getElementById("toggle-tray").onclick = function () {
-      tray.classList.toggle("collapsed");
-      this.classList.toggle("on", !tray.classList.contains("collapsed"));
+      trayCollapsed = !trayCollapsed;
+      applyTray(); fitZoom(); placeActions(); save();
     };
 
     document.getElementById("add-text").onclick = function () {

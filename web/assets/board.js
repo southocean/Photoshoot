@@ -494,6 +494,7 @@
       ["nw", "ne", "sw", "se", "rot"].forEach(function (k) {
         var h = document.createElement("div");
         h.className = "handle " + k;
+        if (k === "rot") h.title = "Drag to rotate · hold Shift to snap to 15°";
         h.dataset.handle = k;
         el.appendChild(h);
       });
@@ -1223,17 +1224,28 @@
     }, growPage);
   }
 
+  /* Rotate by the DELTA from where the pointer grabbed, not by the pointer's
+     absolute angle. Deriving rot from the absolute angle needs a constant that
+     depends on where the handle ends up under the item's flips — get it wrong
+     and the item snaps to a new angle the instant you touch the handle. The
+     delta is flip-independent: d(handle angle) always equals d(rot). */
   function startRotate(e, it) {
     snapshot();
     var cx = it.x + it.w / 2, cy = it.y + it.h / 2;
+    var p0 = pagePoint(e);
+    var a0 = Math.atan2(p0.y - cy, p0.x - cx) * 180 / Math.PI;
+    var rot0 = it.rot || 0;
     var node = page.querySelector('.item[data-id="' + it.id + '"]');
+
     drag(function (e2) {
       var p = pagePoint(e2);
-      /* The handle sits at the top of the unflipped box, so a vertical flip
-         renders it at the bottom — without this the drag runs backwards. */
-      var a = Math.atan2(p.y - cy, p.x - cx) * 180 / Math.PI + (it.flipY ? -90 : 90);
-      if (!e2.altKey) a = Math.round(a / 15) * 15;
-      it.rot = Math.round(a);
+      var a = Math.atan2(p.y - cy, p.x - cx) * 180 / Math.PI;
+      /* Free by default, Shift to snap. Snapping unconditionally meant grabbing
+         the handle on a sticker sitting at -34° yanked it to -30° before the
+         pointer had moved at all. */
+      var next = rot0 + (a - a0);
+      if (e2.shiftKey) next = Math.round(next / 15) * 15;
+      it.rot = Math.round(next);
       if (node) node.style.transform = ("rotate(" + it.rot + "deg) ") +
         (it.flipX ? "scaleX(-1) " : "") + (it.flipY ? "scaleY(-1)" : "");
       placeActions();

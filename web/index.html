@@ -71,6 +71,10 @@
       <div class="tray-list" id="tray-list"></div>
       <div class="tray-foot">
         <button class="filebtn" id="upload">+ Upload photos</button>
+        <div class="meter" id="meter" title="Uploaded photos are stored in this browser">
+          <div class="meter-bar"><i id="meter-fill"></i></div>
+          <span id="meter-text"></span>
+        </div>
         <p class="hint">Or drag image files anywhere onto the page.</p>
       </div>
     </aside>
@@ -87,6 +91,31 @@
 </div>
 
 <div id="actions" hidden></div>
+
+<div id="cropper" hidden>
+  <div class="crop-head">
+    <span class="pb-label">Crop</span>
+    <span id="crop-title"></span>
+    <span class="grow"></span>
+    <span class="pb-label">Ratio</span>
+    <span id="crop-aspects"></span>
+    <span class="sep"></span>
+    <button id="crop-reset" class="ghost">Reset</button>
+    <button id="crop-cancel" class="ghost">Cancel</button>
+    <button id="crop-apply" class="on">Apply</button>
+  </div>
+  <div class="crop-stage" id="crop-stage">
+    <img id="crop-img" alt="">
+    <div id="crop-shade"></div>
+    <div id="crop-rect">
+      <span class="ch nw" data-ch="nw"></span>
+      <span class="ch ne" data-ch="ne"></span>
+      <span class="ch sw" data-ch="sw"></span>
+      <span class="ch se" data-ch="se"></span>
+    </div>
+  </div>
+</div>
+
 <div id="toast" hidden></div>
 <div id="drop" hidden>Drop photos onto the board</div>
 

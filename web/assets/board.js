@@ -35,6 +35,7 @@
     wireStage();
     wireKeys();
     wireDrop();
+    wireCropper();
 
     load();
     preloadAll().then(function () {
@@ -344,6 +345,7 @@
     });
 
     renderTray();
+    renderMeter();
     renderPages();
     syncGrounds();
     syncSizes();
@@ -446,6 +448,30 @@
       b.onclick = function () { addPhoto(p.key); };
       trayList.appendChild(b);
     });
+  }
+
+  /* Uploaded photos live in localStorage as base64 text, and that has a hard
+     ceiling (~5 MB, counted as UTF-16). Show it rather than let it surprise anyone. */
+  var QUOTA = 5 * 1024 * 1024;
+
+  function renderMeter() {
+    var fill = document.getElementById("meter-fill");
+    var text = document.getElementById("meter-text");
+    if (!fill) return;
+
+    var used = 0;
+    try {
+      var raw = localStorage.getItem(KEY);
+      used = raw ? raw.length * 2 : 0;
+    } catch (e) { /* storage blocked — show nothing useful, but don't crash */ }
+
+    var n = lib.filter(function (p) { return p.local; }).length;
+    var pct = Math.min(100, Math.round(used / QUOTA * 100));
+    fill.style.width = pct + "%";
+    fill.parentNode.classList.toggle("warn", pct >= 80);
+    text.textContent = n
+      ? n + " uploaded · " + (used / 1048576).toFixed(1) + " MB of ~5 MB"
+      : (used / 1048576).toFixed(1) + " MB of ~5 MB used";
   }
 
   function addPhoto(key) {
@@ -589,7 +615,16 @@
     var avail = stage.clientWidth - 80;
     setZoom(Math.min(1, avail / board.w));
   }
-  window.addEventListener("resize", function () { placeActions(); });
+  /* The action bar is position:fixed, so it has to be re-placed whenever the
+     board scrolls underneath it — otherwise it detaches from its item. */
+  var placeQueued = false;
+  function queuePlace() {
+    if (placeQueued) return;
+    placeQueued = true;
+    requestAnimationFrame(function () { placeQueued = false; placeActions(); });
+  }
+  window.addEventListener("resize", queuePlace);
+  window.addEventListener("scroll", queuePlace, true);
 
   /* ============================ interaction ============================ */
 
@@ -737,11 +772,21 @@
     buildActions(it);
 
     var r = page.getBoundingClientRect();
-    var left = r.left + (it.x + it.w / 2) * zoom;
-    var top = r.top + it.y * zoom - 52;
+    var s = stage.getBoundingClientRect();
     var w = actions.offsetWidth || 260;
-    left = Math.max(10, Math.min(window.innerWidth - w - 10, left - w / 2));
-    if (top < 60) top = r.top + (it.y + it.h) * zoom + 12;
+    var h = actions.offsetHeight || 36;
+
+    var left = r.left + (it.x + it.w / 2) * zoom - w / 2;
+    left = Math.max(s.left + 8, Math.min(s.right - w - 8, left));
+
+    // above the item by preference; below it if that would leave the viewport;
+    // pinned to the top of the stage if neither fits.
+    var top = r.top + it.y * zoom - h - 12;
+    if (top < s.top + 8) {
+      var below = r.top + (it.y + it.h) * zoom + 12;
+      top = (below + h < s.bottom - 8) ? below : s.top + 8;
+    }
+
     actions.style.left = Math.round(left) + "px";
     actions.style.top = Math.round(top) + "px";
   }
@@ -760,6 +805,8 @@
     actions.appendChild(cap);
 
     if (it.kind === "photo") {
+      actions.appendChild(btn("Crop", function () { openCrop(it); }, "Crop this photo"));
+
       actions.appendChild(btn(it.shape === "circle" ? "◯" : "▢", function () {
         snapshot();
         it.shape = it.shape === "circle" ? "rect" : "circle";
@@ -821,6 +868,186 @@
     board.items = board.items.filter(function (i) { return i.id !== it.id; });
     sel = null;
     render(); save();
+  }
+
+  /* ============================ cropper ============================ */
+  /* Crops are stored as [x, y, w, h] percentages of the SOURCE file, so nothing
+     is ever re-encoded — the same numbers drive the card, the canvas and the PNG. */
+
+  var CROP_RATIOS = [
+    { label: "Free", r: 0 }, { label: "1:1", r: 1 }, { label: "4:5", r: 0.8 },
+    { label: "5:4", r: 1.25 }, { label: "2:3", r: 2 / 3 }, { label: "3:2", r: 1.5 },
+    { label: "16:9", r: 16 / 9 }, { label: "9:16", r: 9 / 16 }
+  ];
+
+  var crop = null;   // { item, disp:{x,y,w,h}, rect:{x,y,w,h}, ratio }
+
+  function openCrop(it) {
+    var p = libOf(it.img);
+    if (!p) return;
+
+    var wrap = document.getElementById("cropper");
+    var img = document.getElementById("crop-img");
+    document.getElementById("crop-title").textContent = p.title || "";
+
+    wrap.hidden = false;
+    actions.hidden = true;
+
+    img.onload = function () { layoutCrop(it, it.crop || [0, 0, 100, 100]); };
+    img.src = p.src;
+    if (img.complete && img.naturalWidth) layoutCrop(it, it.crop || [0, 0, 100, 100]);
+
+    buildRatios();
+  }
+
+  function layoutCrop(it, c) {
+    var stageEl = document.getElementById("crop-stage");
+    var img = document.getElementById("crop-img");
+    var box = stageEl.getBoundingClientRect();
+    var pad = 56;
+
+    var nw = img.naturalWidth, nh = img.naturalHeight;
+    var k = Math.min((box.width - pad * 2) / nw, (box.height - pad * 2) / nh);
+    var dw = nw * k, dh = nh * k;
+    var dx = (box.width - dw) / 2, dy = (box.height - dh) / 2;
+
+    img.style.left = dx + "px";
+    img.style.top = dy + "px";
+    img.style.width = dw + "px";
+    img.style.height = dh + "px";
+
+    crop = {
+      item: it,
+      disp: { x: dx, y: dy, w: dw, h: dh },
+      rect: { x: dx + dw * c[0] / 100, y: dy + dh * c[1] / 100, w: dw * c[2] / 100, h: dh * c[3] / 100 },
+      ratio: 0
+    };
+    paintCrop();
+  }
+
+  function paintCrop() {
+    var r = document.getElementById("crop-rect");
+    r.style.left = crop.rect.x + "px";
+    r.style.top = crop.rect.y + "px";
+    r.style.width = crop.rect.w + "px";
+    r.style.height = crop.rect.h + "px";
+  }
+
+  function buildRatios() {
+    var host = document.getElementById("crop-aspects");
+    host.innerHTML = "";
+    CROP_RATIOS.forEach(function (a) {
+      var b = document.createElement("button");
+      b.textContent = a.label;
+      b.className = crop && crop.ratio === a.r ? "on" : "";
+      b.onclick = function () {
+        crop.ratio = a.r;
+        if (a.r) applyRatio();
+        buildRatios();
+        paintCrop();
+      };
+      host.appendChild(b);
+    });
+  }
+
+  function applyRatio() {
+    var d = crop.disp, R = crop.rect;
+    var w = R.w, h = w / crop.ratio;
+    if (h > d.h) { h = d.h; w = h * crop.ratio; }
+    if (w > d.w) { w = d.w; h = w / crop.ratio; }
+    R.w = w; R.h = h;
+    R.x = Math.max(d.x, Math.min(d.x + d.w - w, R.x));
+    R.y = Math.max(d.y, Math.min(d.y + d.h - h, R.y));
+  }
+
+  function wireCropper() {
+    var rect = document.getElementById("crop-rect");
+
+    rect.addEventListener("pointerdown", function (e) {
+      if (!crop) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var ch = e.target.dataset ? e.target.dataset.ch : null;
+      var start = { x: e.clientX, y: e.clientY };
+      var R0 = Object.assign({}, crop.rect);
+      var d = crop.disp;
+
+      function move(e2) {
+        var dx = e2.clientX - start.x, dy = e2.clientY - start.y;
+        var R = crop.rect;
+
+        if (!ch) {
+          R.x = Math.max(d.x, Math.min(d.x + d.w - R0.w, R0.x + dx));
+          R.y = Math.max(d.y, Math.min(d.y + d.h - R0.h, R0.y + dy));
+        } else {
+          var east = ch[1] === "e", south = ch[0] === "s";
+          var fx = east ? R0.x : R0.x + R0.w;         // the edge that stays put
+          var fy = south ? R0.y : R0.y + R0.h;
+          var px = Math.max(d.x, Math.min(d.x + d.w, e2.clientX));
+          var py = Math.max(d.y, Math.min(d.y + d.h, e2.clientY));
+
+          var w = Math.max(24, Math.abs(px - fx));
+          var h = Math.max(24, Math.abs(py - fy));
+          if (crop.ratio) {
+            h = w / crop.ratio;
+            if (south ? fy + h > d.y + d.h : fy - h < d.y) {
+              h = south ? d.y + d.h - fy : fy - d.y;
+              w = h * crop.ratio;
+            }
+            if (east ? fx + w > d.x + d.w : fx - w < d.x) {
+              w = east ? d.x + d.w - fx : fx - d.x;
+              h = w / crop.ratio;
+            }
+          }
+          R.w = w; R.h = h;
+          R.x = east ? fx : fx - w;
+          R.y = south ? fy : fy - h;
+        }
+        paintCrop();
+      }
+      function up() {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+      }
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+    });
+
+    document.getElementById("crop-reset").onclick = function () {
+      if (!crop) return;
+      crop.rect = { x: crop.disp.x, y: crop.disp.y, w: crop.disp.w, h: crop.disp.h };
+      crop.ratio = 0;
+      buildRatios(); paintCrop();
+    };
+
+    document.getElementById("crop-cancel").onclick = closeCrop;
+
+    document.getElementById("crop-apply").onclick = function () {
+      if (!crop) return;
+      var d = crop.disp, R = crop.rect, it = crop.item;
+      snapshot();
+      it.crop = [
+        Math.max(0, (R.x - d.x) / d.w * 100),
+        Math.max(0, (R.y - d.y) / d.h * 100),
+        Math.min(100, R.w / d.w * 100),
+        Math.min(100, R.h / d.h * 100)
+      ];
+      it.h = Math.round(it.w * aspectOf(it.img, it.crop));   // keep width, follow the new shape
+      closeCrop();
+      growPage(); render(); save();
+    };
+
+    document.addEventListener("keydown", function (e) {
+      if (document.getElementById("cropper").hidden) return;
+      if (e.key === "Escape") { e.preventDefault(); closeCrop(); }
+      if (e.key === "Enter") { e.preventDefault(); document.getElementById("crop-apply").click(); }
+    });
+  }
+
+  function closeCrop() {
+    document.getElementById("cropper").hidden = true;
+    crop = null;
+    placeActions();
   }
 
   /* ============================ text editing ============================ */

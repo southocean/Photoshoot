@@ -103,6 +103,9 @@
         span: p.hero ? 2 : 1, x: 0, y: 0, w: 0, h: 0, rot: 0, z: ++uid
       });
     });
+    (d.stickers || []).forEach(function (s) {
+      items.push(Object.assign({ id: ++uid, kind: "sticker", x: 0, y: 0, z: ++uid }, s));
+    });
     return { name: d.name || "Board", bg: d.bg, w: d.w, h: 1000, items: items };
   }
 
@@ -274,10 +277,12 @@
     var tops = [];
     for (var i = 0; i < COLS; i++) tops.push(MARGIN);
 
-    var order = board.items.slice().sort(function (a, b) {
-      var rank = { text: 0, photo: 1, swatch: 2 };
-      return (rank[a.kind] - rank[b.kind]) || ((b.span || 1) - (a.span || 1));
-    });
+    // Stickers float on top of the layout, so the masonry ignores them.
+    var order = board.items.filter(function (it) { return it.kind !== "sticker"; })
+      .sort(function (a, b) {
+        var rank = { text: 0, photo: 1, swatch: 2 };
+        return (rank[a.kind] - rank[b.kind]) || ((b.span || 1) - (a.span || 1));
+      });
 
     order.forEach(function (it) {
       var span = Math.min(it.span || 1, COLS);
@@ -300,6 +305,17 @@
 
     board.h = Math.max.apply(null, tops) - GUTTER + MARGIN;
     if (board.fixedH) fitToHeight();
+    placeFloats();
+  }
+
+  /* Stickers carrying a fractional position (fx, fy) are laid over the finished
+     board. Once dragged they lose the hint and stay where they were put. */
+  function placeFloats() {
+    board.items.forEach(function (it) {
+      if (it.kind !== "sticker" || it.fx == null) return;
+      it.x = Math.round(board.w * it.fx);
+      it.y = Math.round(board.h * it.fy);
+    });
   }
 
   /* Presets with a fixed height (a 16:9 slide, a square) can't grow downward, so
@@ -666,7 +682,7 @@
     document.getElementById("body").hidden = research;
     document.getElementById("research").hidden = !research;
     document.getElementById("pagebar-wrap").hidden = research;
-    document.getElementById("researchbar").hidden = !research;
+    document.getElementById("research-nav").hidden = !research;
     document.getElementById("board-tools").hidden = research;
     document.getElementById("totop").hidden = !research;
 
@@ -675,6 +691,9 @@
 
     // setView also runs at boot, before the board is loaded — guard both calls.
     if (research) {
+      // Drop the selection outright. Hiding the bar isn't enough: any later
+      // placeActions() — a scroll, a resize — would put it back over the report.
+      if (sel != null) { sel = null; if (board) render(); }
       actions.hidden = true;
       setReport(report);
     } else if (board) {
@@ -824,8 +843,9 @@
       var b = document.createElement("button");
       b.className = "toclink";
       b.dataset.target = h.id;
+      // data-toc carries a one-word label; the heading itself stays long-form
       b.innerHTML = (num ? "<b>" + num.textContent + "</b>" : "") +
-        esc(h.textContent.replace(/^\d+/, "").trim());
+        esc(h.dataset.toc || h.textContent.replace(/^\d+/, "").trim());
       b.onclick = function () { scrollToSection(h); };
       bar.appendChild(b);
     });
@@ -1144,6 +1164,7 @@
 
   function startMove(e, it) {
     snapshot();
+    delete it.fx; delete it.fy;   // moved by hand, so stop auto-placing it
     var p0 = pagePoint(e), x0 = it.x, y0 = it.y;
     var node = page.querySelector('.item[data-id="' + it.id + '"]');
     drag(function (e2) {
@@ -1223,7 +1244,7 @@
   /* ============================ selection actions ============================ */
 
   function placeActions() {
-    var it = sel != null ? itemById(sel) : null;
+    var it = view === "board" && sel != null ? itemById(sel) : null;
     if (!it) { actions.hidden = true; return; }
 
     actions.hidden = false;

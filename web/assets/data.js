@@ -116,5 +116,13 @@ window.DEFAULT_BOARD = {
       colors: ["#2a2318", "#6b4a24", "#b8792c", "#d9a441", "#e8d5a8", "#7a3b2e"], w: 368, h: 118 },
     { kind: "swatch", label: "MOSSA & LAV — the cool half",
       colors: ["#2f3a2c", "#5a6b4a", "#8ba86a", "#c8c3a8", "#e8e2d2", "#a58b5e"], w: 368, h: 118 }
+  ],
+
+  /* Stickers sit on top of the grid rather than in it, so they're placed by
+     fraction of the board once the photos have been arranged. */
+  stickers: [
+    { sticker: "pumpkin",     fx: 0.06, fy: 0.30, w: 190, h: 160, rot: -8 },
+    { sticker: "maple-amber", fx: 0.72, fy: 0.09, w: 140, h: 140, rot: 18 },
+    { sticker: "maple-red",   fx: 0.44, fy: 0.63, w: 120, h: 120, rot: -24 }
   ]
 };

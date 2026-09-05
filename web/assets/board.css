@@ -82,7 +82,8 @@ body {
   border-bottom: 1px solid var(--lichen);
 }
 
-.navswap { position: relative; height: 40px; }
+#research-nav { flex: 1 1 auto; min-width: 0; }
+.navswap { position: relative; height: 32px; }
 .navlayer {
   position: absolute; inset: 0;
   display: flex; align-items: center; gap: 6px;

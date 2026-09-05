@@ -135,9 +135,17 @@ window.DEFAULT_BOARD = {
   /* Stickers sit on top of the grid rather than in it, so they're placed by
      fraction of the board once the photos have been arranged. */
   stickers: [
-    { sticker: "pumpkin",    fx: 0.055, fy: 0.30, w: 230, h: 196, rot: -6 },
-    { sticker: "maple-gold", fx: 0.735, fy: 0.06, w: 150, h: 208, rot: 22 },
-    { sticker: "maple-red",  fx: 0.45,  fy: 0.64, w: 170, h: 200, rot: -28 },
-    { sticker: "rowan",      fx: 0.24,  fy: 0.86, w: 170, h: 176, rot: 12 }
+    /* anchor pins each one to a photo's corner — the junction where items meet —
+       so it sits on the layout and covers corners, not faces. */
+    { sticker: "pumpkin",    anchor: { img: "17", corner: "se", dx: 14, dy: -6 },
+      w: 220, h: 187, rot: -5 },
+    { sticker: "maple-gold", anchor: { img: "11", corner: "ne", dx: -8, dy: 10 },
+      w: 132, h: 183, rot: 24 },
+    { sticker: "maple-red",  anchor: { img: "18", corner: "sw", dx: 14, dy: 6 },
+      w: 158, h: 186, rot: -34, flipY: true },
+    { sticker: "maple-gold", anchor: { img: "01", corner: "ne", dx: -6, dy: 8 },
+      w: 104, h: 144, rot: 128, flipX: true },
+    { sticker: "rowan",      anchor: { img: "23", corner: "se", dx: -10, dy: -8 },
+      w: 150, h: 155, rot: 14 }
   ]
 };

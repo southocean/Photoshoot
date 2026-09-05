@@ -308,13 +308,33 @@
     placeFloats();
   }
 
-  /* Stickers carrying a fractional position (fx, fy) are laid over the finished
-     board. Once dragged they lose the hint and stay where they were put. */
+  /* Stickers are laid over the finished board once the masonry is settled.
+     `anchor` pins one to a photo's corner — the junction where up to four items
+     meet — so it reads as resting on the layout instead of floating in a gap,
+     and it covers corners rather than faces. `fx`/`fy` is the fallback for a
+     plain fractional position. Dragging clears both. */
   function placeFloats() {
     board.items.forEach(function (it) {
-      if (it.kind !== "sticker" || it.fx == null) return;
-      it.x = Math.round(board.w * it.fx);
-      it.y = Math.round(board.h * it.fy);
+      if (it.kind !== "sticker") return;
+
+      if (it.anchor) {
+        var host = null;
+        board.items.forEach(function (o) {
+          if (o.kind === "photo" && o.img === it.anchor.img) host = o;
+        });
+        if (host) {
+          var c = it.anchor.corner || "se";
+          var px = host.x + (c[1] === "e" ? host.w : 0);
+          var py = host.y + (c[0] === "s" ? host.h : 0);
+          it.x = Math.round(px - it.w / 2 + (it.anchor.dx || 0));
+          it.y = Math.round(py - it.h / 2 + (it.anchor.dy || 0));
+          return;
+        }
+      }
+      if (it.fx != null) {
+        it.x = Math.round(board.w * it.fx);
+        it.y = Math.round(board.h * it.fy);
+      }
     });
   }
 
@@ -402,7 +422,9 @@
     el.style.width = it.w + "px";
     el.style.height = it.h + "px";
     el.style.zIndex = it.z;
-    if (it.rot) el.style.transform = "rotate(" + it.rot + "deg)";
+    var tf = (it.rot ? "rotate(" + it.rot + "deg) " : "") +
+             (it.flipX ? "scaleX(-1) " : "") + (it.flipY ? "scaleY(-1)" : "");
+    if (tf.trim()) el.style.transform = tf.trim();
 
     if (it.kind === "photo") {
       var p = libOf(it.img);
@@ -1140,7 +1162,7 @@
 
   function startMove(e, it) {
     snapshot();
-    delete it.fx; delete it.fy;   // moved by hand, so stop auto-placing it
+    delete it.fx; delete it.fy; delete it.anchor;   // moved by hand, so stop auto-placing it
     var p0 = pagePoint(e), x0 = it.x, y0 = it.y;
     var node = page.querySelector('.item[data-id="' + it.id + '"]');
     drag(function (e2) {
@@ -1206,7 +1228,8 @@
       var a = Math.atan2(p.y - cy, p.x - cx) * 180 / Math.PI + 90;
       if (!e2.altKey) a = Math.round(a / 15) * 15;
       it.rot = Math.round(a);
-      if (node) node.style.transform = "rotate(" + it.rot + "deg)";
+      if (node) node.style.transform = ("rotate(" + it.rot + "deg) ") +
+        (it.flipX ? "scaleX(-1) " : "") + (it.flipY ? "scaleY(-1)" : "");
       placeActions();
     });
   }
@@ -1253,6 +1276,15 @@
     actions.innerHTML = "";
 
     /* Controls only — the photo's name and id are drawn on the photo itself. */
+    if (it.kind === "sticker") {
+      actions.appendChild(btn("⇄", function () {
+        snapshot(); it.flipX = !it.flipX; render(); save();
+      }, "Flip horizontally", !!it.flipX));
+      actions.appendChild(btn("⇅", function () {
+        snapshot(); it.flipY = !it.flipY; render(); save();
+      }, "Flip vertically", !!it.flipY));
+    }
+
     if (it.kind === "photo") {
       actions.appendChild(btn("Crop", function () { openCrop(it); }, "Crop this photo"));
 
@@ -1685,6 +1717,7 @@
           g.save();
           g.translate((it.x + it.w / 2) * S, (it.y + it.h / 2) * S);
           g.rotate((it.rot || 0) * Math.PI / 180);
+          if (it.flipX || it.flipY) g.scale(it.flipX ? -1 : 1, it.flipY ? -1 : 1);
           g.translate(-it.w * S / 2, -it.h * S / 2);
           if (it.kind === "photo") drawPhoto(g, it, imgs[i], S);
           else if (it.kind === "sticker") { if (imgs[i]) g.drawImage(imgs[i], 0, 0, it.w * S, it.h * S); }

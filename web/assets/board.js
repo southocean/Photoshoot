@@ -40,6 +40,7 @@
     wireDrop();
     wireCropper();
     wireTrayGrip();
+    wireStickers();
     wireViews();
 
     load();
@@ -413,6 +414,12 @@
       t.addEventListener("dblclick", function (e) { e.stopPropagation(); editText(it, t); });
       el.appendChild(t);
 
+    } else if (it.kind === "sticker") {
+      var st = document.createElement("div");
+      st.className = "sticker";
+      st.innerHTML = stickerOf(it.sticker).svg;
+      el.appendChild(st);
+
     } else if (it.kind === "swatch") {
       var s = document.createElement("div");
       s.className = "swatch";
@@ -423,6 +430,26 @@
         }).join("") + "</div>";
       s.querySelector(".lbl").textContent = it.label || "";
       el.appendChild(s);
+    }
+
+    /* The name and id live on the photo, not in the floating bar — that bar is
+       for controls only. Double-click the name to rename it. */
+    if (sel === it.id && it.kind === "photo") {
+      var p2 = libOf(it.img);
+      var lab = document.createElement("div");
+      lab.className = "idlabel";
+      lab.innerHTML = '<span class="pid">' + esc(it.img) + '</span>' +
+        '<span class="pname" title="Double-click to rename">' + esc(titleOf(it.img)) + "</span>";
+      var nameEl = lab.querySelector(".pname");
+      nameEl.addEventListener("dblclick", function (e) {
+        e.stopPropagation();
+        editName(it.img, nameEl);
+      });
+      lab.addEventListener("pointerdown", function (e) {
+        if (nameEl.getAttribute("contenteditable") === "true") e.stopPropagation();
+      });
+      el.appendChild(lab);
+      if (!p2) nameEl.textContent = "(missing photo)";
     }
 
     if (sel === it.id) {
@@ -445,9 +472,50 @@
 
   /* ============================ tray ============================ */
 
+  /* Titles can be renamed; overrides are saved per board document so a photo
+     downloaded as "791013238_1068024832702535" doesn't stay called that. */
+  function titleOf(key) {
+    if (doc && doc.titles && doc.titles[key]) return doc.titles[key];
+    var p = libOf(key);
+    return p ? p.title : key;
+  }
+
+  function editName(key, node) {
+    node.setAttribute("contenteditable", "true");
+    node.focus();
+    var r = document.createRange();
+    r.selectNodeContents(node);
+    var s = window.getSelection();
+    s.removeAllRanges(); s.addRange(r);
+
+    function done() {
+      node.removeEventListener("blur", done);
+      node.removeEventListener("keydown", key2);
+      node.removeAttribute("contenteditable");
+      var next = node.innerText.replace(/\s+/g, " ").trim();
+      var p = libOf(key);
+      if (next && next !== (p ? p.title : "")) {
+        snapshot();
+        if (!doc.titles) doc.titles = {};
+        doc.titles[key] = next;
+      } else if (!next && doc.titles) {
+        delete doc.titles[key];
+      }
+      render(); save();
+    }
+    function key2(e) {
+      if (e.key === "Enter") { e.preventDefault(); node.blur(); }
+      if (e.key === "Escape") { e.preventDefault(); node.textContent = titleOf(key); node.blur(); }
+    }
+    node.addEventListener("blur", done);
+    node.addEventListener("keydown", key2);
+  }
+
   function renderTray() {
     var used = {};
     board.items.forEach(function (i) { if (i.kind === "photo") used[i.img] = true; });
+    var selItem = sel != null ? itemById(sel) : null;
+    var activeKey = selItem && selItem.kind === "photo" ? selItem.img : null;
 
     trayList.innerHTML = "";
     lib.forEach(function (p) {
@@ -455,9 +523,10 @@
       wrap.className = "tile-wrap";
 
       var b = document.createElement("button");
-      b.className = "tile" + (used[p.key] ? " used" : "");
+      b.className = "tile" + (used[p.key] ? " used" : "") + (p.key === activeKey ? " active" : "");
       b.type = "button";
-      b.title = p.title + (used[p.key] ? " — already on the board" : " — click to add");
+      b.dataset.key = p.key;
+      b.title = titleOf(p.key) + (used[p.key] ? " — already on the board" : " — click to add");
 
       var c = p.crop || [0, 0, 100, 100];
       var f = document.createElement("div");
@@ -488,6 +557,21 @@
 
       trayList.appendChild(wrap);
     });
+
+    if (activeKey) revealTile(activeKey);
+  }
+
+  /* Bring the selected photo's tile into view without yanking the whole page. */
+  function revealTile(key) {
+    var tile = trayList.querySelector('.tile[data-key="' + key + '"]');
+    if (!tile) return;
+    var t = tile.getBoundingClientRect(), l = trayList.getBoundingClientRect();
+    if (t.top < l.top + 4 || t.bottom > l.bottom - 4) {
+      trayList.scrollTo({
+        top: trayList.scrollTop + (t.top - l.top) - (l.height / 2 - t.height / 2),
+        behavior: "smooth"
+      });
+    }
   }
 
   /* Deleting an upload also has to take it off every board — otherwise the item
@@ -604,6 +688,83 @@
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ============================ stickers ============================ */
+  /* Inline SVG so they scale cleanly and cost nothing to ship. Each is a normal
+     board item: movable, resizable, rotatable, deletable, undoable. */
+
+  var MAPLE = "M50 8 L57 26 L71 19 L67 34 L87 31 L74 44 L95 53 L74 60 L83 74 L63 70 " +
+              "L65 88 L52 77 L50 96 L48 77 L35 88 L37 70 L17 74 L26 60 L5 53 L26 44 " +
+              "L13 31 L33 34 L29 19 L43 26 Z";
+
+  var STICKERS = [
+    { key: "pumpkin", label: "Pumpkin", w: 190, h: 160, svg:
+      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M50 34 C50 24 45 17 38 12" stroke="#6f7c3c" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+      '<path d="M53 33 C62 31 70 25 73 15" stroke="#86934a" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="50" cy="62" rx="35" ry="29" fill="#c9682a"/>' +
+      '<ellipse cx="33" cy="62" rx="17" ry="28" fill="#dd7f33"/>' +
+      '<ellipse cx="67" cy="62" rx="17" ry="28" fill="#dd7f33"/>' +
+      '<ellipse cx="50" cy="62" rx="12" ry="29" fill="#eb9a46"/>' +
+      '<path d="M50 33 L50 40" stroke="#5c6733" stroke-width="7" stroke-linecap="round"/></svg>' },
+
+    { key: "maple-amber", label: "Maple leaf", w: 150, h: 150, svg:
+      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="' + MAPLE + '" fill="#d99331"/>' +
+      '<path d="M50 96 L50 62" stroke="#a9702a" stroke-width="3" stroke-linecap="round"/></svg>' },
+
+    { key: "maple-red", label: "Maple leaf, red", w: 150, h: 150, svg:
+      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="' + MAPLE + '" fill="#b04627"/>' +
+      '<path d="M50 96 L50 62" stroke="#7d3220" stroke-width="3" stroke-linecap="round"/></svg>' }
+  ];
+
+  function stickerOf(key) {
+    for (var i = 0; i < STICKERS.length; i++) if (STICKERS[i].key === key) return STICKERS[i];
+    return STICKERS[0];
+  }
+
+  function addSticker(key) {
+    var s = stickerOf(key);
+    snapshot();
+    var it = {
+      id: ++uid, kind: "sticker", sticker: key,
+      x: Math.round(board.w / 2 - s.w / 2 + (Math.random() * 80 - 40)),
+      y: Math.round(scrollCenterY()),
+      w: s.w, h: s.h,
+      rot: Math.round(Math.random() * 30 - 15),
+      z: topZ() + 1
+    };
+    board.items.push(it);
+    sel = it.id;
+    growPage(); render(); save();
+  }
+
+  function wireStickers() {
+    var pop = document.getElementById("stickers");
+    STICKERS.forEach(function (s) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.title = s.label;
+      b.setAttribute("aria-label", "Add " + s.label);
+      b.innerHTML = s.svg;
+      b.onclick = function () { pop.hidden = true; addSticker(s.key); };
+      pop.appendChild(b);
+    });
+
+    var open = document.getElementById("add-sticker");
+    open.onclick = function (e) {
+      e.stopPropagation();
+      if (!pop.hidden) { pop.hidden = true; return; }
+      var r = open.getBoundingClientRect();
+      pop.hidden = false;
+      pop.style.left = Math.round(Math.min(r.left, window.innerWidth - pop.offsetWidth - 10)) + "px";
+      pop.style.top = Math.round(r.bottom + 8) + "px";
+    };
+    document.addEventListener("pointerdown", function (e) {
+      if (!pop.hidden && !pop.contains(e.target) && e.target !== open) pop.hidden = true;
     });
   }
 
@@ -1094,13 +1255,7 @@
     actions.dataset.kind = it.kind;
     actions.innerHTML = "";
 
-    var cap = document.createElement("span");
-    cap.className = "cap";
-    cap.textContent = it.kind === "photo"
-      ? (libOf(it.img) ? libOf(it.img).title : "Photo")
-      : it.kind === "text" ? "Text" : "Palette";
-    actions.appendChild(cap);
-
+    /* Controls only — the photo's name and id are drawn on the photo itself. */
     if (it.kind === "photo") {
       actions.appendChild(btn("Crop", function () { openCrop(it); }, "Crop this photo"));
 
@@ -1423,6 +1578,21 @@
     });
   }
 
+  /* Files off Facebook, Pinterest or a CDN arrive named things like
+     "791013238_1068024832702535_n.jpg" or "IMG_4821". Those are not names, so
+     don't pretend they are — call it Photo N and let it be renamed on the board. */
+  var uploadCount = 0;
+  function cleanName(filename) {
+    var base = String(filename).replace(/\.[a-z0-9]+$/i, "");
+    var words = base.replace(/[_\-+]+/g, " ").replace(/\s+/g, " ").trim();
+    var letters = (words.match(/[a-zA-ZåäöÅÄÖ]/g) || []).length;
+    var junk = letters < 4 ||
+      /^(img|dsc|pxl|screenshot|photo|image|download|untitled)\b/i.test(words) ||
+      /^[0-9a-f\s]+$/i.test(words);
+    if (junk) return "Photo " + (++uploadCount);
+    return words.charAt(0).toUpperCase() + words.slice(1);
+  }
+
   function addFiles(files) {
     if (!files.length) return;
     var left = files.length, added = [];
@@ -1432,7 +1602,7 @@
           var key = "u" + (++uid);
           var p = {
             key: key, src: url, crop: [0, 0, 100, 100], local: true,
-            title: f.name.replace(/\.[a-z0-9]+$/i, ""), source: "Added by you", note: ""
+            title: cleanName(f.name), source: "Added by you", note: ""
           };
           natural[key] = [w, h];
           lib.push(p);
@@ -1499,14 +1669,19 @@
 
       var ordered = board.items.slice().sort(function (a, b) { return a.z - b.z; });
       return Promise.all(ordered.map(function (it) {
-        if (it.kind !== "photo") return null;
-        var p = libOf(it.img);
-        if (!p) return null;
+        var src = null;
+        if (it.kind === "photo") {
+          var p = libOf(it.img);
+          src = p ? p.src : null;
+        } else if (it.kind === "sticker") {
+          src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(stickerOf(it.sticker).svg);
+        }
+        if (!src) return null;
         return new Promise(function (res) {
           var im = new Image();
           im.onload = function () { res(im); };
           im.onerror = function () { res(null); };
-          im.src = p.src;
+          im.src = src;
         });
       })).then(function (imgs) {
         ordered.forEach(function (it, i) {
@@ -1515,6 +1690,7 @@
           g.rotate((it.rot || 0) * Math.PI / 180);
           g.translate(-it.w * S / 2, -it.h * S / 2);
           if (it.kind === "photo") drawPhoto(g, it, imgs[i], S);
+          else if (it.kind === "sticker") { if (imgs[i]) g.drawImage(imgs[i], 0, 0, it.w * S, it.h * S); }
           else if (it.kind === "text") drawText(g, it, S);
           else drawSwatch(g, it, S);
           g.restore();

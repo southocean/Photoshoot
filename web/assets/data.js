@@ -103,7 +103,7 @@ window.DEFAULT_BOARD = {
   name: "Höst — all references",
   bg: "#211a13",
   w: 1600,
-  photos: ["17", "11", "14", "07", "18", "25", "16", "15", "19", "23", "04", "01", "20", "05"],
+  photos: ["17", "11", "14", "07", "18", "25", "22", "15", "19", "23", "04", "08", "01", "20", "05"],
   items: [
     { kind: "text", text: "HÖST", font: "display", size: 92, color: "#f0e6d2", w: 752, h: 108, span: 2 },
     { kind: "text", text: "DIRECTION — three weeks of Swedish autumn: gold, rust, wet granite\nand a sun that never gets high. Every look has to work in that light,\nfor a client of any age.",

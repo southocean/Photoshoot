@@ -283,6 +283,9 @@ button:disabled { opacity: .35; cursor: default; }
 button.on { background: var(--moss); border-color: var(--moss); color: #14170f; font-weight: 600; }
 button.ghost { background: none; border-color: transparent; }
 button.ghost:hover { background: var(--humus-hi); border-color: var(--lichen); }
+/* .ghost is declared after .on at equal specificity, so it would strip the fill
+   from an active ghost button and leave near-black text on a dark ground. */
+button.ghost.on { background: var(--moss); border-color: var(--moss); color: #14170f; }
 button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 
 .zoom { display: flex; align-items: center; gap: 2px; }
@@ -351,6 +354,8 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 .tile .fill { position: absolute; inset: 0; background-repeat: no-repeat; }
 .tile:hover { border-color: var(--moss); }
 .tile.used { opacity: .55; }
+/* mirrors the board selection, so clicking a photo shows you which one it is */
+.tile.active { opacity: 1; border-color: var(--moss); box-shadow: 0 0 0 2px var(--moss); }
 .tile.used::after {
   content: "on board";
   position: absolute; inset: auto 0 0 0;
@@ -429,6 +434,31 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   overflow: hidden; text-overflow: ellipsis;
 }
 
+.item .sticker { width: 100%; height: 100%; }
+.item .sticker svg { width: 100%; height: 100%; display: block; }
+
+/* name + id, shown on the photo itself while it is selected */
+.idlabel {
+  position: absolute; left: 0; right: 0; top: 0;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 9px;
+  background: linear-gradient(to bottom, rgba(9, 11, 6, .92), rgba(9, 11, 6, .55) 70%, transparent);
+  font-size: 12px; line-height: 1.3;
+  color: var(--birch);
+  pointer-events: none;
+}
+.idlabel .pid {
+  font-family: var(--mono); font-size: 10.5px;
+  background: var(--moss); color: #14170f;
+  border-radius: 3px; padding: 1px 5px; flex: none; font-weight: 600;
+}
+.idlabel .pname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.idlabel .pname[contenteditable="true"] {
+  white-space: normal; overflow: visible; pointer-events: auto;
+  outline: 1px solid var(--moss); border-radius: 3px; padding: 0 3px; cursor: text;
+}
+.item.sel .idlabel { pointer-events: auto; }
+
 /* selection */
 .item.sel::after {
   content: ""; position: absolute; inset: -1px;
@@ -462,10 +492,21 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 }
 #actions[hidden] { display: none; }
 #actions button { padding: 5px 9px; font-size: 12px; }
-#actions .cap {
-  font-family: var(--mono); font-size: 10.5px; color: var(--ash);
-  padding: 5px 8px; max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+/* the popover for picking a sticker */
+#stickers {
+  position: fixed; z-index: 46;
+  display: flex; gap: 6px; padding: 7px;
+  background: var(--humus); border: 1px solid var(--lichen);
+  border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, .6);
 }
+#stickers[hidden] { display: none; }
+#stickers button {
+  width: 52px; height: 52px; padding: 5px;
+  display: grid; place-items: center;
+  background: var(--bark); border-radius: 8px;
+}
+#stickers button:hover { border-color: var(--moss); }
+#stickers svg { width: 100%; height: 100%; }
 #actions input[type="color"] {
   width: 28px; height: 26px; padding: 0; border: 1px solid var(--lichen);
   border-radius: 5px; background: none; cursor: pointer;

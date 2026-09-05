@@ -137,15 +137,16 @@ window.DEFAULT_BOARD = {
   stickers: [
     /* anchor pins each one to a photo's corner — the junction where items meet —
        so it sits on the layout and covers corners, not faces. */
-    { sticker: "pumpkin",    anchor: { img: "17", corner: "se", dx: 14, dy: -6 },
-      w: 220, h: 187, rot: -5 },
+    { sticker: "pumpkin",    anchor: { img: "17", corner: "nw", dx: 72, dy: 44 },
+      w: 148, h: 126, rot: -5 },
     { sticker: "maple-gold", anchor: { img: "11", corner: "ne", dx: -8, dy: 10 },
-      w: 132, h: 183, rot: 24 },
+      w: 112, h: 155, rot: 24 },
     { sticker: "maple-red",  anchor: { img: "18", corner: "sw", dx: 14, dy: 6 },
-      w: 158, h: 186, rot: -34, flipY: true },
+      w: 138, h: 162, rot: -34, flipY: true },
+    /* rot 96 rather than 128: mirrored, 128 read as near-parallel to the leaf above */
     { sticker: "maple-gold", anchor: { img: "01", corner: "ne", dx: -6, dy: 8 },
-      w: 104, h: 144, rot: 128, flipX: true },
+      w: 94, h: 130, rot: 96, flipY: true },
     { sticker: "rowan",      anchor: { img: "23", corner: "se", dx: -10, dy: -8 },
-      w: 150, h: 155, rot: 14 }
+      w: 130, h: 134, rot: 14 }
   ]
 };

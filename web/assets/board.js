@@ -111,7 +111,7 @@
       localStorage.setItem(KEY, JSON.stringify({
         doc: doc,
         uploads: lib.filter(function (p) { return p.local; }),
-        ui: { trayW: trayW, trayCollapsed: trayCollapsed, view: view, zoom: zoom, fitOn: fitOn }
+        ui: { trayW: trayW, trayCollapsed: trayCollapsed, view: view, report: report, zoom: zoom, fitOn: fitOn }
       }));
     } catch (e) {
       toast("Could not save — browser storage is full. Delete a photo from the tray, or export the board.");
@@ -130,6 +130,7 @@
         if (p.ui.trayW) trayW = clampTray(p.ui.trayW);
         trayCollapsed = !!p.ui.trayCollapsed;
         if (p.ui.view) view = p.ui.view;
+        if (p.ui.report) report = p.ui.report;
         if (typeof p.ui.fitOn === "boolean") fitOn = p.ui.fitOn;
         if (p.ui.zoom) savedZoom = p.ui.zoom;
       }
@@ -571,6 +572,8 @@
   /* ---- views: the board, and the research behind it ---- */
 
   var view = "board";
+  var report = "fantasy";
+  var SWAP_AT = 90;        // scroll depth at which ideas give way to sections
 
   function setView(v) {
     view = v;
@@ -579,7 +582,9 @@
     document.getElementById("body").hidden = research;
     document.getElementById("research").hidden = !research;
     document.getElementById("pagebar-wrap").hidden = research;
+    document.getElementById("researchbar").hidden = !research;
     document.getElementById("board-tools").hidden = research;
+    document.getElementById("totop").hidden = !research;
 
     document.getElementById("view-board-tab").classList.toggle("on", !research);
     document.getElementById("view-research-tab").classList.toggle("on", research);
@@ -587,15 +592,132 @@
     // setView also runs at boot, before the board is loaded — guard both calls.
     if (research) {
       actions.hidden = true;
+      setReport(report);
     } else if (board) {
       refit();
     }
     if (doc) save();
   }
 
+  /* ---- the reports ---- */
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function reports() {
+    return Array.prototype.slice.call(document.querySelectorAll("#research .report"));
+  }
+
+  function setReport(id) {
+    report = id;
+    var host = document.getElementById("research");
+
+    reports().forEach(function (r) {
+      r.hidden = r.id !== "report-" + id;
+    });
+
+    labelSections();
+    buildIdeaBar();
+    buildToc();
+    host.scrollTop = 0;
+    onResearchScroll();
+    if (doc) save();
+  }
+
+  /* Section ids and numbers are derived from the DOM, so a new report needs no
+     extra wiring — drop in an <article class="report"> and it appears here. */
+  function labelSections() {
+    reports().forEach(function (r) {
+      r.querySelectorAll("h2").forEach(function (h, i) {
+        if (!h.id) h.id = r.id + "-s" + (i + 1);
+      });
+    });
+  }
+
+  function sectionsOf(id) {
+    var r = document.getElementById("report-" + id);
+    return r ? Array.prototype.slice.call(r.querySelectorAll("h2")) : [];
+  }
+
+  function buildIdeaBar() {
+    var bar = document.getElementById("ideabar");
+    bar.innerHTML = "";
+    reports().forEach(function (r) {
+      var id = r.id.replace("report-", "");
+      var b = document.createElement("button");
+      b.className = "idea" + (id === report ? " on" : "");
+      b.textContent = r.dataset.title || id;
+      b.onclick = function () { setReport(id); };
+      bar.appendChild(b);
+    });
+  }
+
+  function buildToc() {
+    var bar = document.getElementById("tocbar");
+    bar.innerHTML = "";
+    sectionsOf(report).forEach(function (h) {
+      var num = h.querySelector(".num");
+      var b = document.createElement("button");
+      b.className = "toclink";
+      b.dataset.target = h.id;
+      b.innerHTML = (num ? "<b>" + num.textContent + "</b>" : "") +
+        esc(h.textContent.replace(/^\d+/, "").trim());
+      b.onclick = function () { scrollToSection(h); };
+      bar.appendChild(b);
+    });
+  }
+
+  function scrollToSection(h) {
+    var host = document.getElementById("research");
+    host.scrollTo({ top: h.offsetTop - 18, behavior: "smooth" });
+  }
+
+  var scrollQueued = false;
+  function onResearchScroll() {
+    var host = document.getElementById("research");
+    var y = host.scrollTop;
+    var deep = y > SWAP_AT;
+
+    document.getElementById("ideabar").classList.toggle("hide", deep);
+    document.getElementById("tocbar").classList.toggle("hide", !deep);
+    document.getElementById("totop").classList.toggle("away", y < 260);
+
+    // highlight the section whose heading last passed the top of the viewport
+    var current = null;
+    sectionsOf(report).forEach(function (h) {
+      if (h.offsetTop - 80 <= y) current = h.id;
+    });
+    document.querySelectorAll("#tocbar .toclink").forEach(function (b) {
+      b.classList.toggle("on", b.dataset.target === current);
+    });
+    if (deep && current) {
+      var on = document.querySelector('#tocbar .toclink[data-target="' + current + '"]');
+      if (on) {
+        var bar = document.getElementById("tocbar");
+        var r = on.getBoundingClientRect(), br = bar.getBoundingClientRect();
+        if (r.left < br.left + 8 || r.right > br.right - 8) {
+          bar.scrollTo({ left: on.offsetLeft - br.width / 2 + r.width / 2, behavior: "smooth" });
+        }
+      }
+    }
+  }
+
   function wireViews() {
     document.getElementById("view-board-tab").onclick = function () { setView("board"); };
     document.getElementById("view-research-tab").onclick = function () { setView("research"); };
+
+    document.getElementById("research").addEventListener("scroll", function () {
+      if (scrollQueued) return;
+      scrollQueued = true;
+      requestAnimationFrame(function () { scrollQueued = false; onResearchScroll(); });
+    });
+
+    document.getElementById("totop").onclick = function () {
+      document.getElementById("research").scrollTo({ top: 0, behavior: "smooth" });
+    };
   }
 
   /* ---- photo tray: collapse and resize ---- */

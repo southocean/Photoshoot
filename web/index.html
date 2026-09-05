@@ -70,6 +70,13 @@
     <span id="sizes"></span>
   </div>
 
+  <div id="researchbar" hidden>
+    <div class="navswap">
+      <div class="navlayer" id="ideabar" aria-label="Business ideas"></div>
+      <div class="navlayer hide" id="tocbar" aria-label="Sections in this report"></div>
+    </div>
+  </div>
+
   <div id="body">
 
     <aside id="tray">
@@ -101,7 +108,8 @@
   </div>
 
   <div id="research" hidden>
-    <article class="doc">
+
+    <article class="doc report" id="report-fantasy" data-title="Fantasy photoshoot">
 
       <div class="doc-head">
         <div class="kicker">Market research · Stockholm</div>
@@ -358,7 +366,237 @@
       </div>
 
     </article>
+
+    <article class="doc report" id="report-wedding" data-title="Wedding planner" hidden>
+
+      <div class="doc-head">
+        <div class="kicker">Market research · Stockholm</div>
+        <h1>Is there a wedding business worth building in Sweden?</h1>
+        <p class="dateline">Desk research, 5 September 2026 · benchmarks sourced, inferences marked</p>
+      </div>
+
+      <section class="verdict">
+        <p class="call">Yes — but <em>not</em> as a wedding planner.</p>
+        <p class="sub">Swedes largely don't hire planners, and the product they do buy is a day-coordinator at 8–20k. That's a hard, low-margin job. The money is in supplying the wedding, not organising it — and in the two segments Swedish planners cannot serve.</p>
+
+        <div class="findings">
+          <div class="finding" style="--c:#c4574b">
+            <b>The planning fee is the worst line</b>
+            <span>Food and drink take 40–50% of a wedding budget. Coordination takes about 5%. Sell the fee alone and you've picked the smallest slice of the largest purchase of someone's life.</span>
+          </div>
+          <div class="finding" style="--c:#d9a441">
+            <b>Diaspora weddings are the wedge</b>
+            <span>Two-day, two-ceremony, 200-guest Vietnamese and Chinese weddings happen in Sweden and almost no Swedish planner can run one. You can. That is a defensible position, not a preference.</span>
+          </div>
+          <div class="finding" style="--c:#a3be71">
+            <b>It is the same capability stack</b>
+            <span>Wardrobe, hair and makeup, sets, photo and video — the photoshoot business builds all of it. A wedding is that stack at ten times the ticket, and pre-wedding shoots are a product Sweden barely sells.</span>
+          </div>
+        </div>
+
+        <p class="guard"><b>The number that decides it:</b> as a pure planner, twenty weddings a year at a 30,000 kr fee is 600,000 kr of revenue for a brutal year. Supplying four services to those same twenty weddings is roughly 2.2M. Same couples, same calendar, entirely different business.</p>
+      </section>
+
+      <h2><span class="num">01</span>The market, in numbers</h2>
+      <div class="tablewrap">
+        <table>
+          <tbody>
+            <tr><td>Weddings in Sweden, 2025</td><td class="num">46,431</td></tr>
+            <tr><td>2024 · 2023 (20-year low)</td><td class="num">44,854 · 44,190</td></tr>
+            <tr><td>Peak year, 1989</td><td class="num">108,919</td></tr>
+            <tr><td>Conducted by the Church of Sweden, 2025</td><td class="num">12,135 <em>(26%)</em></td></tr>
+            <tr><td>August 2025 alone</td><td class="num">7,398</td></tr>
+            <tr><td>Most common budget band</td><td class="num">100–200k kr</td></tr>
+            <tr><td>Average, SBAB survey</td><td class="num">76,600 kr</td></tr>
+            <tr><td>90+ guests, average spend</td><td class="num">~200,000 kr</td></tr>
+            <tr><td>Rule of thumb, per guest</td><td class="num">1,500–2,000 kr</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Two things jump out. <strong>The market is shrinking on a thirty-year view and flat on a five-year one</strong> — 46,431 against 108,919 in 1989. And <strong>church weddings have collapsed from 90% in 1960 to 26% today</strong>, which matters more than it looks: the church used to supply the structure, the venue and the script. Civil couples have to buy all three. That vacuum is the actual opening.</p>
+      <p class="flag">[verify] Stockholm county's share isn't published in the sources I found. Roughly a fifth of Sweden's population lives there, so ~9,000 weddings a year is a reasonable working figure — confirm against SCB's regional table before you plan against it.</p>
+
+      <h2><span class="num">02</span>Do Swedes buy wedding planning?</h2>
+      <p>Mostly, no — and the shape of what they do buy tells you why.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Product</th><th>Price</th><th>Reality in Sweden</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Day coordinator</strong></td><td class="num">8–20k</td><td>The common choice. Someone runs the day; the couple planned it.</td></tr>
+            <tr><td><strong>Part planning</strong></td><td class="num">20–50k</td><td>Selected pieces. Growing.</td></tr>
+            <tr><td><strong>Full planning</strong></td><td class="num">50–100k+</td><td>Rare. Mostly destination and high-budget couples.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The cultural reason is the same one from the photoshoot research, wearing different clothes. Hiring someone to organise your party reads as both extravagant and faintly helpless. The Swedish solution has always been the <strong>toastmaster</strong> — a friend, unpaid, who runs the evening, manages the speeches and enforces the schedule. Every Swedish wedding already has a coordinator. She is not for hire and she is not a threat, but she is the reason the paid role is small.</p>
+      <div class="callout">
+        <b>The framing that survives this:</b> not "we'll plan your wedding," which sounds like you think they can't. But <em>"we make the parts nobody in your family knows how to make"</em> — the tea ceremony, the two-language run of show, the 200-guest banquet, the film. That is a supplier, not a manager, and Swedes buy suppliers all day long.
+      </div>
+
+      <h2><span class="num">03</span>Segments, in order</h2>
+
+      <h3>1 — Diaspora weddings: the wedge</h3>
+      <p>A Vietnamese or Chinese wedding in Sweden is not a Swedish wedding with different food. It is typically <strong>two days and two ceremonies</strong>: a tea ceremony where the couple serve their parents and ancestors — the Chinese order is stricter, groom's family first, usually kneeling — plus a Western ceremony and a banquet that can run to 200–300 guests. Áo dài are often custom-made for the couple, the parents and the wedding party. It needs bilingual hosting, a photographer who knows when the important moment happens, and catering nobody in the Swedish supplier register does well.</p>
+      <p>This is happening in Sweden now, and it is served badly. You are natively qualified for it, which is the rarest thing in a services business: <strong>a real barrier that your competitors cannot cross by trying harder.</strong> Add the Middle Eastern, Assyrian/Syriac, Kurdish and Persian communities in Stockholm — all with large, multi-day, high-spend weddings — and the segment is bigger than the founders' own communities. <span class="flag">[verify — sizing these is your first research job, and I could not source it]</span></p>
+
+      <h3>2 — Destination and elopement couples</h3>
+      <p>Foreign couples marry in Sweden legally and easily: <strong>hindersprövning</strong> from Skatteverket is free and valid four months. Packages start around <strong>USD 4,000</strong>. Lapland sells northern lights from September to March, Stockholm sells the archipelago, Gotland sells medieval ruins. These couples are English-speaking, remote, and <em>need</em> a local fixer — the one case where full planning is the normal purchase rather than the rare one. It is also <strong>counter-seasonal</strong>, which matters more than anything else on this page.</p>
+
+      <h3>3 — Swedish couples, as a supplier not a planner</h3>
+      <p>Photo, video, hair and makeup, decor, pre-wedding shoot. Bought individually, without any of the cultural friction the planner role carries.</p>
+
+      <h3>4 — The pre-wedding shoot</h3>
+      <p>Standard in Vietnam and China, nearly absent in Sweden. You already have the wardrobe, the makeup artist and the locations from the photoshoot business. It is the cheapest cross-sell in this document and it puts you in front of a couple <em>a year before</em> they book everything else.</p>
+
+      <h2><span class="num">04</span>Competition and how couples find you</h2>
+      <ul>
+        <li><strong>Bröllopsguiden</strong> — Scandinavia's largest supplier register; the default search surface, and paid listings.</li>
+        <li><strong>Bröllopsmässor</strong> — wedding fairs run year-round in Stockholm, Gothenburg and Malmö. Still one of the most effective channels: face to face, and couples book on the day.</li>
+        <li><strong>Venuu, Lovio, Weddingly</strong> — venue and vendor marketplaces.</li>
+        <li><strong>Instagram and the venue itself.</strong> Venues refer suppliers they trust. <strong>Getting on three or four venue recommendation lists is worth more than any advertising you can buy</strong> — that is the distribution strategy, and it is free.</li>
+      </ul>
+      <p>Established planners exist and are professional. What almost none of them have is a team that can run a tea ceremony in two languages and shoot it properly.</p>
+
+      <h2><span class="num">05</span>Where the money actually is</h2>
+      <p>Benchmarks from Swedish suppliers:</p>
+      <div class="tablewrap">
+        <table>
+          <tbody>
+            <tr><td>Food and drink, 100 guests</td><td class="num">70–150k</td></tr>
+            <tr><td>Venue — manor or castle, Stockholm</td><td class="num">50–150k</td></tr>
+            <tr><td>Venue — day hire, modest</td><td class="num">from 11–20k</td></tr>
+            <tr><td>Photographer</td><td class="num">from 7,500</td></tr>
+            <tr><td>Videographer — budget / mid / premium</td><td class="num">15–25k · 25–40k · 40k+</td></tr>
+            <tr><td>Coordination fee</td><td class="num">8–100k</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Stockholm venues run <strong>30–50% above the national average</strong>, and a castle costs four to five times per guest what a restaurant does. Food and drink is 40–50% of everything. Coordination is a rounding error by comparison.</p>
+
+      <h2><span class="num">06</span>Unit economics</h2>
+      <h3>As a planner</h3>
+      <div class="tablewrap">
+        <table>
+          <tbody>
+            <tr><td>Full planning fee, ex VAT</td><td class="num">64,000</td></tr>
+            <tr><td>Hours: planning, meetings, vendor management, the day, follow-up</td><td class="num">~150 h</td></tr>
+            <tr><td>Assistant on the day</td><td class="num">−4,000</td></tr>
+            <tr><td>Travel, samples, admin</td><td class="num">−3,000</td></tr>
+            <tr class="total"><td>Per hour, before your own overhead</td><td class="num">≈ 380 kr</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>That is a decent Swedish wage and a bad business — it doesn't scale, it can't be delegated cheaply, and every krona of it is your own time.</p>
+
+      <h3>As the supplier of one diaspora wedding</h3>
+      <div class="tablewrap">
+        <table>
+          <tbody>
+            <tr><td>Coordination, two days and two ceremonies</td><td class="num">40,000</td></tr>
+            <tr><td>Photography, two days</td><td class="num">35,000</td></tr>
+            <tr><td>Film</td><td class="num">30,000</td></tr>
+            <tr><td>Hair and makeup — bride, mothers, party</td><td class="num">14,000</td></tr>
+            <tr><td>Decor and rental, tea ceremony set</td><td class="num">25,000</td></tr>
+            <tr><td>Pre-wedding shoot</td><td class="num">9,000</td></tr>
+            <tr class="total"><td>Revenue, one wedding, incl. VAT</td><td class="num">≈ 153,000</td></tr>
+            <tr><td>Freelancers, kit, transport, consumables</td><td class="num">−55,000</td></tr>
+            <tr class="total"><td>Contribution</td><td class="num">≈ 67,000</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Twenty of those is 3M in revenue and roughly 1.3M of contribution</strong> — against 600,000 of pure fee income for the same twenty couples and more stress. You do not need a bigger market. You need a bigger share of the wedding you are already standing in.</p>
+      <p class="flag">[verify] These prices are constructed from Swedish supplier benchmarks, not quoted from diaspora weddings — the segment publishes almost nothing. Test them on three real couples before you build a plan on them.</p>
+
+      <h2><span class="num">07</span>Seasonality — worse than the photoshoot business</h2>
+      <p><strong>Nearly half of all Swedish weddings happen in June, July and August</strong>, and August alone took 7,398 of 2025's 46,431. That is a more extreme concentration than the photoshoot business, and it cuts both ways: peak weekends are the constraint on revenue, and nine months of the year are nearly empty.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Period</th><th>What runs</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Jun–Aug</strong></td><td>Everything. You can physically serve maybe 12–16 weddings. This is the ceiling.</td></tr>
+            <tr><td>May, Sep</td><td>Shoulder. Cheaper venues, better light, worth actively selling into.</td></tr>
+            <tr><td><strong>Sep–Mar</strong></td><td><strong>Lapland and northern-lights elopements.</strong> The counter-seasonal product, and the reason this business survives its own winter.</td></tr>
+            <tr><td>Oct–Apr</td><td>Tea ceremonies and banquets are indoors and date-flexible — diaspora weddings are far less seasonal than Swedish ones. Another argument for the wedge.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2><span class="num">08</span>Legal and admin</h2>
+      <ul>
+        <li><strong>Hindersprövning</strong> for every couple, foreign couples included — free, four months' validity. Knowing this cold is a genuine service to destination clients.</li>
+        <li><strong>You are not the officiant.</strong> A civil ceremony needs an authorised vigselförrättare appointed by the länsstyrelse. Know who they are; don't imply you can do it. <span class="flag">[verify]</span></li>
+        <li><strong>Serving food and alcohol.</strong> The moment you cater rather than book a caterer, you are into food hygiene registration and alcohol licensing. Broker it, don't cook it — at least at first. <span class="flag">[verify]</span></li>
+        <li><strong>Contracts and deposits.</strong> Weddings are paid long in advance and cancelled sometimes. Written terms, staged payments, a cancellation schedule, and liability insurance from the first booking.</li>
+        <li><strong>Marking up vendors.</strong> Commission versus transparent pass-through is both a legal and a trust question. Pick one and publish it. <span class="flag">[verify]</span></li>
+      </ul>
+
+      <h2><span class="num">09</span>Risks and kill criteria</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Risk</th><th>Severity</th><th>Early warning</th></tr></thead>
+          <tbody>
+            <tr><td>The diaspora segment is too small in Stockholm to fill a summer</td><td><span class="flag">Fatal</span></td><td>Fewer than 10 qualifying weddings findable in a season</td></tr>
+            <tr><td>Word of mouth is everything and you have none</td><td>High</td><td>Second summer still has no venue referrals</td></tr>
+            <tr><td>One bad wedding is public and permanent</td><td>High</td><td>Any review below five stars in this industry</td></tr>
+            <tr><td>Sixteen peak weekends caps the business</td><td>Structural</td><td>Turning down August dates by year two — a good problem, plan for it</td></tr>
+            <tr><td>Founder burnout: a wedding is a 16-hour day with no retakes</td><td>High</td><td>Dreading the calendar</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <b>Kill criteria:</b> if after one summer you have not delivered <strong>three paid weddings</strong>, at least one of them a full diaspora two-day, and you are not on <strong>two venue recommendation lists</strong>, the wedge isn't real in Stockholm. Fall back to being a wedding photo-and-film supplier, which the photoshoot business already equips you for, and drop the coordination.
+      </div>
+
+      <h2><span class="num">10</span>How to find out — one season</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Test</th><th>Question</th><th>Threshold</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Ten conversations</strong> with couples who had a diaspora wedding here in the last three years</td><td>What did they struggle to buy?</td><td>6 of 10 name the same missing supplier</td></tr>
+            <tr><td><strong>Work one wedding free</strong> as second shooter or assistant coordinator</td><td>Do we actually want this job?</td><td>You'd do it again. A 16-hour day answers this honestly</td></tr>
+            <tr><td><strong>Pitch four venues</strong> as a supplier, not a planner</td><td>Will anyone refer us?</td><td>2 agree to list you</td></tr>
+            <tr><td><strong>List on Bröllopsguiden + one fair</strong></td><td>Does inbound exist at all?</td><td>15 enquiries, 3 site visits</td></tr>
+            <tr><td><strong>Sell one pre-wedding shoot</strong></td><td>Does the cross-sell work?</td><td>1 booking, and they ask what else you do</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Order matters here: <strong>do the free wedding before anything else.</strong> A wedding day is sixteen hours, unrepeatable, and emotionally loaded in a way a photoshoot never is. Find out whether you like it before you build a company around it.</p>
+
+      <h2><span class="num">11</span>Sources</h2>
+      <div class="sources">
+        <h3>Market size and structure</h3>
+        <ul>
+          <li><a href="https://www.scb.se/hitta-statistik/sverige-i-siffror/manniskorna-i-sverige/gifta-i-sverige/" target="_blank" rel="noopener">Gifta i Sverige — SCB</a> · <a href="https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__BE__BE0101__BE0101L/GiftSkilsmassaTyp/" target="_blank" rel="noopener">Giftermål och skilsmässor efter region och typ — SCB</a></li>
+          <li><a href="https://www.scb.se/hitta-statistik/redaktionellt/hogtryck-for-brollop-i-augusti/" target="_blank" rel="noopener">Högtryck för bröllop under sommaren — SCB</a> · <a href="https://brollopstal.se/blog/brollop-statistik/" target="_blank" rel="noopener">30+ statistik om svenska bröllop</a></li>
+          <li><a href="https://www.sverigesradio.se/artikel/fler-valjer-borgerlig-vigsel-framfor-kyrkbrollop" target="_blank" rel="noopener">Fler väljer borgerlig vigsel — Sveriges Radio</a> · <a href="https://signum.se/artikelarkiv/statistik-fran-svenska-kyrkan/" target="_blank" rel="noopener">Statistik från Svenska kyrkan — Signum</a></li>
+        </ul>
+        <h3>Budgets and supplier prices</h3>
+        <ul>
+          <li><a href="https://www.brollopsexperten.se/vad-kostar-ett-brollop/" target="_blank" rel="noopener">Vad kostar ett bröllop 2026 — Bröllopsexperten</a> · <a href="https://weddingly.se/inspiration/budget-och-kostnader/brollopsbudget-kostnad-planering-sverige" target="_blank" rel="noopener">Bröllopsbudget — Weddingly</a></li>
+          <li><a href="https://www.resursbank.se/resurs-insights/vad-kostar-ett-brollop" target="_blank" rel="noopener">Vad kostar ett bröllop — Resurs Bank</a> · <a href="https://brollopsmagasinet.se/sa-mycket-lagger-svenska-par-pa-brollop/" target="_blank" rel="noopener">Så mycket lägger svenska par på bröllop</a></li>
+          <li><a href="https://www.brollopsexperten.se/brollopsfotograf-pris/" target="_blank" rel="noopener">Bröllopsfotograf pris 2026</a> · <a href="https://www.davidsahlberg.com/blogg-vad-kostar-det-att-anlita-en-brollopsvideograf" target="_blank" rel="noopener">Vad kostar en bröllopsvideograf</a></li>
+          <li><a href="https://lovio.se/guides/brollopslokal-pris" target="_blank" rel="noopener">Bröllopslokal pris 2026 — Lovio</a> · <a href="https://venuu.se/brollop-stockholm-herrgard" target="_blank" rel="noopener">Herrgårdar och slott, Stockholm — Venuu</a></li>
+        </ul>
+        <h3>Coordination as a product</h3>
+        <ul>
+          <li><a href="https://lovio.se/guides/brollopskoordinator-pris" target="_blank" rel="noopener">Bröllopskoordinator pris — Lovio</a> · <a href="https://weddingbyjosefina.se/vad-kostar-en-brollopsplanerare-i-sverige/" target="_blank" rel="noopener">Vad kostar en bröllopsplanerare</a> · <a href="https://karinlundin.com/sv/brollopsplanerare-stockholm/" target="_blank" rel="noopener">Bröllopsplanerare Stockholm</a></li>
+        </ul>
+        <h3>Traditions, destination and diaspora</h3>
+        <ul>
+          <li><a href="https://lovio.se/guides/brollopstraditioner-sverige" target="_blank" rel="noopener">12 svenska bröllopstraditioner</a> · <a href="https://giftaoss.se/guider/svenska-brollopstraditioner" target="_blank" rel="noopener">Svenska bröllopstraditioner — GiftaOss</a></li>
+          <li><a href="https://www.lisabjork.se/2025/10/01/ultimate-guide-getting-married-stockholm/" target="_blank" rel="noopener">Getting married in Stockholm — Lisa Björk</a> · <a href="https://www.lisabjork.se/blog/getting-married-in-sweden-as-a-foreigner/" target="_blank" rel="noopener">Getting married in Sweden as a foreigner</a> · <a href="https://www.adventure-wedding.com/en/destination/sweden" target="_blank" rel="noopener">Sweden elopement packages</a></li>
+          <li><a href="https://www.lizzyliz.com/blog/traditional-vietnamese-and-chinese-tea-ceremony-101" target="_blank" rel="noopener">Vietnamese and Chinese tea ceremony 101</a> · <a href="https://www.sistersinlaw.se/blog/2025/1/6/brollop-med-te-ceremoni-vasteras-louise-jens" target="_blank" rel="noopener">Bröllop med te-ceremoni utanför Västerås</a></li>
+        </ul>
+        <h3>Distribution</h3>
+        <ul>
+          <li><a href="https://brollopsguiden.se/leverantorsregister/" target="_blank" rel="noopener">Bröllopsguiden leverantörsregister</a> · <a href="https://weddingly.se/anslut-ditt-foretag/foretagsartiklar/branschkatalog/brollopsmassor-2026-alla-massor-delta" target="_blank" rel="noopener">Bröllopsmässor 2026</a></li>
+        </ul>
+      </div>
+
+    </article>
   </div>
+
+<button id="totop" hidden title="Back to top">&uarr; Top</button>
 </div>
 
 <div id="actions" hidden></div>

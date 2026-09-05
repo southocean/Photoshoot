@@ -15,8 +15,9 @@
   var doc = null;        // { boards: [...], active: n } — one board per look
   var board = null;      // shorthand for doc.boards[doc.active]
   var zoom = 1, sel = null, uid = 0;
-  var TRAY_MIN = 150, TRAY_MAX = 560, TRAY_DEFAULT = 218;
+  var TRAY_MIN = 150, TRAY_MAX = 620, TRAY_DEFAULT = 300;
   var trayW = TRAY_DEFAULT, trayCollapsed = false;
+  var fitOn = true, savedZoom = 0;
   var undoStack = [], redoStack = [];
   var downloads = null;
   var natural = {};      // key -> [w, h]
@@ -51,7 +52,8 @@
         arrange();
       }
       render();
-      fitZoom();
+      syncFit();
+      if (fitOn || !savedZoom) fitZoom(); else setZoom(savedZoom);
     });
 
     if (window.claude && window.claude.use) {
@@ -85,16 +87,19 @@
 
   /* ============================ state ============================ */
 
+  /* Only the curated subset goes on the default board — the rest stay in the tray.
+     Uploads are never auto-placed, which is what keeps Reset from touching them. */
   function buildDefault() {
     var d = window.DEFAULT_BOARD;
     var items = d.items.map(function (it) {
       return Object.assign({ id: ++uid, x: 0, y: 0, rot: 0, z: ++uid }, it);
     });
-    lib.forEach(function (p) {
-      var w = p.hero ? 2 : 1;
+    (d.photos || []).forEach(function (key) {
+      var p = libOf(key);
+      if (!p) return;
       items.push({
         id: ++uid, kind: "photo", img: p.key, crop: p.crop.slice(),
-        span: w, x: 0, y: 0, w: 0, h: 0, rot: 0, z: ++uid
+        span: p.hero ? 2 : 1, x: 0, y: 0, w: 0, h: 0, rot: 0, z: ++uid
       });
     });
     return { name: d.name || "Board", bg: d.bg, w: d.w, h: 1000, items: items };
@@ -106,7 +111,7 @@
       localStorage.setItem(KEY, JSON.stringify({
         doc: doc,
         uploads: lib.filter(function (p) { return p.local; }),
-        ui: { trayW: trayW, trayCollapsed: trayCollapsed, view: view }
+        ui: { trayW: trayW, trayCollapsed: trayCollapsed, view: view, zoom: zoom, fitOn: fitOn }
       }));
     } catch (e) {
       toast("Could not save — browser storage is full. Delete a photo from the tray, or export the board.");
@@ -125,6 +130,8 @@
         if (p.ui.trayW) trayW = clampTray(p.ui.trayW);
         trayCollapsed = !!p.ui.trayCollapsed;
         if (p.ui.view) view = p.ui.view;
+        if (typeof p.ui.fitOn === "boolean") fitOn = p.ui.fitOn;
+        if (p.ui.zoom) savedZoom = p.ui.zoom;
       }
       if (p.uploads && p.uploads.length) {
         p.uploads.forEach(function (u) { if (!libOf(u.key)) lib.push(u); });
@@ -173,7 +180,7 @@
     doc.active = i;
     board = doc.boards[i];
     sel = null;
-    render(); fitZoom(); save();
+    render(); refit(); save();
   }
 
   function addBoard(from) {
@@ -195,7 +202,7 @@
     doc.active = doc.boards.length - 1;
     board = b;
     sel = null;
-    render(); fitZoom(); save();
+    render(); refit(); save();
   }
 
   function renameBoard() {
@@ -214,7 +221,7 @@
     doc.active = Math.max(0, doc.active - 1);
     board = doc.boards[doc.active];
     sel = null;
-    render(); fitZoom(); save();
+    render(); refit(); save();
   }
 
   function renderPages() {
@@ -332,7 +339,7 @@
         board.fixedH = s.fixedH;
         board.size = s.key;
         arrange();
-        sel = null; render(); fitZoom(); save();
+        sel = null; render(); refit(); save();
       };
       host.appendChild(b);
     });
@@ -581,8 +588,7 @@
     if (research) {
       actions.hidden = true;
     } else if (board) {
-      fitZoom();
-      placeActions();
+      refit();
     }
     if (doc) save();
   }
@@ -621,7 +627,7 @@
         grip.classList.remove("dragging");
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", up);
-        fitZoom(); placeActions(); save();
+        refit(); save();
       }
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", up);
@@ -629,7 +635,7 @@
 
     grip.addEventListener("dblclick", function () {
       trayW = TRAY_DEFAULT;
-      applyTray(); fitZoom(); placeActions(); save();
+      applyTray(); refit(); save();
     });
 
     grip.addEventListener("keydown", function (e) {
@@ -637,14 +643,14 @@
       if (!d) return;
       e.preventDefault();
       trayW = clampTray(trayW + d);
-      applyTray(); fitZoom(); placeActions(); save();
+      applyTray(); refit(); save();
     });
   }
 
   function wireToolbar() {
     document.getElementById("toggle-tray").onclick = function () {
       trayCollapsed = !trayCollapsed;
-      applyTray(); fitZoom(); placeActions(); save();
+      applyTray(); refit(); save();
     };
 
     document.getElementById("add-text").onclick = function () {
@@ -674,16 +680,16 @@
       board.items.forEach(function (it) {
         if (it.kind === "photo") it.span = libOf(it.img) && libOf(it.img).hero ? 2 : 1;
       });
-      arrange(); sel = null; render(); fitZoom(); save();
+      arrange(); sel = null; render(); refit(); save();
       toast("Tidied into a grid — drag anything back out of it.");
     };
 
     document.getElementById("undo").onclick = undo;
     document.getElementById("redo").onclick = redo;
 
-    document.getElementById("zin").onclick = function () { setZoom(zoom * 1.25); };
-    document.getElementById("zout").onclick = function () { setZoom(zoom / 1.25); };
-    document.getElementById("zfit").onclick = fitZoom;
+    document.getElementById("zin").onclick = function () { setZoom(zoom * 1.25, true); };
+    document.getElementById("zout").onclick = function () { setZoom(zoom / 1.25, true); };
+    document.getElementById("zfit").onclick = function () { fitOn = true; syncFit(); fitZoom(); save(); };
 
     var g = document.getElementById("grounds");
     grounds.forEach(function (c) {
@@ -717,7 +723,7 @@
           snapshot();
           board = p.board;
           (p.uploads || []).forEach(function (u) { if (!libOf(u.key)) lib.push(u); });
-          sel = null; render(); fitZoom(); save();
+          sel = null; render(); refit(); save();
           toast("Board imported.");
         } catch (err) { toast("That file is not a board export."); }
       };
@@ -730,10 +736,17 @@
       e.target.value = "";
     };
 
+    /* Resets THIS board only. Other boards, and every photo in the tray including
+       uploads, are left alone — uploads are deleted one at a time from the tray. */
     document.getElementById("reset").onclick = function () {
-      if (!confirm("Start again from the default arrangement? Photos you uploaded are kept in the tray.")) return;
+      if (!confirm("Reset “" + board.name + "” to the default arrangement?\n\n" +
+                   "Your other boards are untouched, and nothing is removed from the photo tray — " +
+                   "uploads are deleted individually from there.")) return;
       snapshot();
-      board = buildDefault(); arrange(); sel = null; render(); fitZoom(); save();
+      var fresh = buildDefault();
+      doc.boards[doc.active] = fresh;
+      board = fresh;
+      arrange(); sel = null; render(); refit(); save();
     };
 
     syncUndo();
@@ -745,18 +758,37 @@
     });
   }
 
-  function setZoom(z) {
+  /* Zoom has two modes. Fit ON re-fits whenever the space changes — load, tray
+     resize, window resize, switching board. Any manual zoom turns it OFF and the
+     level is remembered; pressing Fit turns it back ON. */
+  function setZoom(z, manual) {
     zoom = Math.min(3, Math.max(0.1, z));
     document.getElementById("zlabel").textContent = Math.round(zoom * 100) + "%";
     page.style.transform = "scale(" + zoom + ")";
     pagewrap.style.width = board.w * zoom + "px";
     pagewrap.style.height = board.h * zoom + "px";
+    if (manual && fitOn) { fitOn = false; syncFit(); }
     placeActions();
+    if (manual) save();
   }
 
   function fitZoom() {
     var avail = stage.clientWidth - 80;
     setZoom(Math.min(1, avail / board.w));
+  }
+
+  /* Called wherever the available space changed. Respects the toggle. */
+  function refit() {
+    if (fitOn) fitZoom(); else placeActions();
+  }
+
+  function syncFit() {
+    var b = document.getElementById("zfit");
+    if (b) {
+      b.classList.toggle("on", fitOn);
+      b.setAttribute("aria-pressed", fitOn ? "true" : "false");
+      b.title = fitOn ? "Auto-fit is on — zoom manually to turn it off" : "Fit the board and keep it fitted";
+    }
   }
   /* The action bar is position:fixed, so it has to be re-placed whenever the
      board scrolls underneath it — otherwise it detaches from its item. */
@@ -805,7 +837,7 @@
     stage.addEventListener("wheel", function (e) {
       if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
-      setZoom(zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1));
+      setZoom(zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1), true);
     }, { passive: false });
   }
 
@@ -1310,13 +1342,13 @@
     var url = URL.createObjectURL(file);
     var img = new Image();
     img.onload = function () {
-      var s = Math.min(1, 1600 / Math.max(img.width, img.height));
+      var s = Math.min(1, 1200 / Math.max(img.width, img.height));
       var c = document.createElement("canvas");
       c.width = Math.round(img.width * s);
       c.height = Math.round(img.height * s);
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
-      cb(c.toDataURL("image/jpeg", 0.85), c.width, c.height);
+      cb(c.toDataURL("image/jpeg", 0.82), c.width, c.height);
     };
     img.onerror = function () { URL.revokeObjectURL(url); cb(null); };
     img.src = url;

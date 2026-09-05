@@ -98,8 +98,24 @@ body {
 .views { display: flex; gap: 3px; }
 #board-tools { display: contents; }
 #board-tools[hidden] { display: none; }
-.vtab { background: none; border-color: transparent; }
-.vtab.on { background: var(--humus-hi); border-color: var(--lichen); font-weight: 600; }
+/* The active tab must restate `color`: the global button.on rule sets near-black
+   text to sit on the moss fill, and a dark surface here would leave it unreadable. */
+.vtab {
+  background: none;
+  border-color: transparent;
+  color: var(--ash);
+  border-radius: 6px 6px 0 0;
+  padding-bottom: 7px;
+  box-shadow: inset 0 -2px 0 transparent;
+}
+.vtab:hover:not(.on) { background: var(--humus-hi); border-color: transparent; color: var(--birch); }
+.vtab.on {
+  background: var(--humus-hi);
+  border-color: transparent;
+  color: var(--birch);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--moss);
+}
 
 /* ================= market research ================= */
 

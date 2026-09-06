@@ -104,16 +104,19 @@ body {
 
 #ideabar { display: flex; align-items: center; gap: 6px; flex: none; }
 
+/* These pick a report the way the board tabs pick a board, so they are the same
+   control: same face, same size, same radius, same moss for the active one.
+   Serif in a rounded pill made the one pair of buttons on the site that looked
+   like they came from somewhere else. */
 .idea {
-  font-family: var(--display); font-size: 15px;
-  padding: 4px 14px; border-radius: 999px; flex: none;
+  font-size: 12.5px; padding: 5px 12px; flex: none;
   background: none; border-color: var(--lichen); color: var(--ash);
   transition: max-width .3s ease, opacity .2s ease, padding .3s ease,
               border-width .3s ease, color .13s, background .13s;
   max-width: 240px; overflow: hidden; white-space: nowrap;
 }
 .idea:hover:not(.on) { color: var(--birch); background: var(--humus-hi); border-color: var(--lichen); }
-.idea.on { background: var(--birch); border-color: var(--birch); color: #14170f; font-weight: 500; }
+.idea.on { background: var(--moss); border-color: var(--moss); color: #14170f; font-weight: 600; }
 
 /* "Fantasy photoshoot" is most of the bar on a phone. Once you are reading,
    the title has already done its job and the short name identifies it. */
@@ -144,15 +147,23 @@ body {
 /* Ids throughout: the global `button:hover:not(:disabled):not(.on)` is three
    classes deep and would otherwise repaint the active dot its plain grey — which
    is exactly what it did to whichever dot the pointer happened to rest on. */
+/* A desktop bar has room for the section name, so a node is a pill there and
+   the number keeps its place at the head of it. On a phone the name goes and
+   the pill closes up into the numbered dot. */
 #progress .pnode {
   position: relative; flex: none;
-  width: 21px; height: 21px; padding: 0;
-  display: grid; place-items: center;
-  border-radius: 50%;
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 23px; padding: 0 11px 0 8px;
+  border-radius: 999px;
   background: var(--bark); border: 1px solid var(--lichen);
-  font-family: var(--mono); font-size: 9.5px; line-height: 1; color: #6d745f;
+  font-family: var(--sans); font-size: 11.5px; line-height: 1; color: #6d745f;
   transition: background .2s, border-color .2s, color .2s, box-shadow .2s;
 }
+#progress .pnode b {
+  font-family: var(--mono); font-size: 9.5px; font-weight: 400; opacity: .75;
+  font-variant-numeric: tabular-nums;
+}
+#progress .pnode .pname { white-space: nowrap; }
 /* the connector belongs to the gap before its node, so it lights up when that
    node is reached — no separate track element to keep in sync while scrolling */
 #progress .pnode::before {
@@ -832,6 +843,13 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   #researchbar { padding: 6px 10px; gap: 8px; }
   #progress { gap: 11px; }
   #progress .pnode::before { width: 11px; }
+  /* numbers only — the names never survived this width, and the tooltip has them */
+  #progress .pnode {
+    width: 21px; height: 21px; padding: 0; gap: 0;
+    display: grid; place-items: center; border-radius: 50%;
+  }
+  #progress .pnode .pname { display: none; }
+  #progress .pnode b { opacity: 1; }
 
   #pagebar-wrap { padding: 6px 10px; gap: 6px; overflow: hidden; }
   #pagebar-wrap .pb-label { display: none; }

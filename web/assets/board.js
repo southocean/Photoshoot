@@ -897,11 +897,12 @@
     var bar = document.getElementById("progress");
     bar.innerHTML = "";
     sectionsOf(report).forEach(function (h, i) {
-      var name = h.dataset.toc || h.textContent.replace(/^d+/, "").trim();
+      var name = h.dataset.toc || h.textContent.replace(/^\d+/, "").trim();
       var b = document.createElement("button");
       b.className = "pnode";
       b.dataset.target = h.id;
-      b.textContent = String(i + 1);
+      // the number carries it on a phone; a desktop bar has room for the name
+      b.innerHTML = "<b>" + (i + 1) + '</b><span class="pname">' + esc(name) + "</span>";
       b.title = name;
       b.setAttribute("aria-label", name);
       // no lingering focus ring: the scroll position is what lights a dot

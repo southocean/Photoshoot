@@ -427,13 +427,13 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 /* the rail: only there once the gallery is minimised */
 #tray-open {
   position: absolute; left: 0; top: 10px; z-index: 6;
-  display: none; align-items: center; gap: 7px;
-  padding: 8px 10px 8px 8px;
+  display: none; align-items: center; justify-content: center;
+  padding: 8px 9px;
   border-radius: 0 8px 8px 0; border-left: none;
   background: var(--humus); border-color: var(--lichen);
   box-shadow: 4px 6px 20px rgba(0, 0, 0, .45);
-  font-size: 12px;
 }
+#tray-open .ico svg { width: 17px; height: 17px; }
 #tray-open:hover { border-color: var(--moss); color: var(--moss); }
 #tray.collapsed #tray-open { display: inline-flex; }
 

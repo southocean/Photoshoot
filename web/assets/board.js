@@ -17,7 +17,7 @@
   var zoom = 1, sel = null, uid = 0;
   var TRAY_MIN = 150, TRAY_MAX = 620, TRAY_DEFAULT = 300;
   var trayW = TRAY_DEFAULT, trayCollapsed = false;
-  var fitOn = true, savedZoom = 0;
+  var fitOn = true, savedZoom = 0, sawSavedUi = false;
   var undoStack = [], redoStack = [];
   var downloads = null;
   var natural = {};      // key -> [w, h]
@@ -42,8 +42,11 @@
     wireTrayGrip();
     wireStickers();
     wireViews();
+    wireResponsive();
 
     load();
+    // first visit on a phone: the board matters more than the tray
+    if (!sawSavedUi && window.innerWidth <= NARROW) trayCollapsed = true;
     applyTray();
     setView(view);
     preloadAll().then(function () {
@@ -133,6 +136,7 @@
       if (p.ui) {
         if (p.ui.trayW) trayW = clampTray(p.ui.trayW);
         trayCollapsed = !!p.ui.trayCollapsed;
+        sawSavedUi = true;
         if (p.ui.view) view = p.ui.view;
         if (p.ui.report) report = p.ui.report;
         if (typeof p.ui.fitOn === "boolean") fitOn = p.ui.fitOn;
@@ -580,7 +584,10 @@
       n.textContent = p.key;
       b.appendChild(n);
 
-      b.onclick = function () { addPhoto(p.key); };
+      b.onclick = function () {
+        addPhoto(p.key);
+        if (isNarrow()) { trayCollapsed = true; applyTray(); refit(); save(); }
+      };
       wrap.appendChild(b);
 
       if (p.local) {
@@ -900,15 +907,108 @@
     };
   }
 
+  /* ---- narrow screens ---- */
+
+  var NARROW = 820;
+  /* Secondary tools. On a phone these move into one menu instead of wrapping the
+     bar onto four rows; the nodes themselves move, so handlers stay attached. */
+  var OVERFLOW = ["add-text", "add-swatch", "add-sticker", "arrange", "undo", "redo",
+                  "grounds", "png", "json", "import", "reset", "sizes"];
+  var homes = null;     // where each overflow node lives on a wide screen
+  var narrow = null;
+
+  function isNarrow() { return window.innerWidth <= NARROW; }
+
+  function rememberHomes() {
+    homes = OVERFLOW.map(function (id) {
+      var el = document.getElementById(id);
+      return el ? { el: el, parent: el.parentNode, next: el.nextSibling } : null;
+    }).filter(Boolean);
+  }
+
+  function applyResponsive() {
+    var n = isNarrow();
+    if (n === narrow) return;
+    narrow = n;
+
+    var menu = document.getElementById("moremenu");
+    var more = document.getElementById("more");
+    more.hidden = !n;
+
+    // full labels don't fit beside the tools once the bar stops wrapping
+    document.getElementById("view-board-tab").textContent = n ? "Board" : "Mood board";
+    document.getElementById("view-research-tab").textContent = n ? "Research" : "Market research";
+
+    if (n) {
+      homes.forEach(function (h) { menu.appendChild(h.el); });
+    } else {
+      homes.forEach(function (h) { h.parent.insertBefore(h.el, h.next); });
+      closeMenu();
+    }
+    applyTray();
+    refit();
+  }
+
+  function closeMenu() {
+    document.getElementById("moremenu").hidden = true;
+    document.getElementById("more").setAttribute("aria-expanded", "false");
+    syncScrim();
+  }
+
+  function syncScrim() {
+    var menuOpen = !document.getElementById("moremenu").hidden;
+    var trayOpen = isNarrow() && !trayCollapsed;
+    document.getElementById("scrim").hidden = !(menuOpen || trayOpen);
+  }
+
+  function wireResponsive() {
+    rememberHomes();
+
+    var more = document.getElementById("more");
+    var menu = document.getElementById("moremenu");
+
+    more.onclick = function (e) {
+      e.stopPropagation();
+      if (!menu.hidden) { closeMenu(); return; }
+      menu.hidden = false;
+      more.setAttribute("aria-expanded", "true");
+      var r = more.getBoundingClientRect();
+      menu.style.top = Math.round(r.bottom + 8) + "px";
+      // clamp: if the button is flush to the edge the offset goes negative
+      menu.style.right = Math.max(8, Math.round(window.innerWidth - r.right)) + "px";
+      menu.style.left = "auto";
+      syncScrim();
+    };
+    menu.addEventListener("click", function (e) {
+      // a tool that opens its own dialog should not leave the menu covering it
+      if (e.target.closest("button")) closeMenu();
+    });
+
+    document.getElementById("scrim").onclick = function () {
+      closeMenu();
+      if (isNarrow() && !trayCollapsed) {
+        trayCollapsed = true;
+        applyTray(); refit(); save();
+      }
+    };
+
+    window.addEventListener("resize", applyResponsive);
+    applyResponsive();
+  }
+
   /* ---- photo tray: collapse and resize ---- */
 
   function clampTray(w) { return Math.max(TRAY_MIN, Math.min(TRAY_MAX, Math.round(w))); }
 
   function applyTray() {
-    tray.style.width = (trayCollapsed ? 0 : trayW) + "px";
     tray.classList.toggle("collapsed", trayCollapsed);
+    /* On a narrow screen the drawer's width is fixed in CSS and the collapse is a
+       transform, so an inline width would only fight it. */
+    if (isNarrow()) tray.style.removeProperty("width");
+    else tray.style.width = (trayCollapsed ? 0 : trayW) + "px";
     var t = document.getElementById("toggle-tray");
     if (t) t.classList.toggle("on", !trayCollapsed);
+    syncScrim();
   }
 
   function wireTrayGrip() {
@@ -1079,12 +1179,15 @@
   }
 
   function fitZoom() {
-    var avail = stage.clientWidth - 80;
+    // a phone cannot spare 80px of margin around the board
+    var avail = stage.clientWidth - (isNarrow() ? 20 : 80);
     setZoom(Math.min(1, avail / board.w));
   }
 
-  /* Called wherever the available space changed. Respects the toggle. */
+  /* Called wherever the available space changed. Respects the toggle.
+     Guards `board` because layout code also runs during boot, before load. */
   function refit() {
+    if (!board) return;
     if (fitOn) fitZoom(); else placeActions();
   }
 
@@ -1145,6 +1248,39 @@
       e.preventDefault();
       setZoom(zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1), true);
     }, { passive: false });
+
+    /* Pinch to zoom. Ctrl+wheel is the desktop gesture and there is no touch
+       equivalent, so without this a phone is stuck at whatever Fit chose. */
+    var pinch = null;
+    var touches = {};
+
+    stage.addEventListener("pointerdown", function (e) {
+      if (e.pointerType !== "touch") return;
+      touches[e.pointerId] = { x: e.clientX, y: e.clientY };
+      var ids = Object.keys(touches);
+      if (ids.length === 2) {
+        var a = touches[ids[0]], b = touches[ids[1]];
+        pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y), z0: zoom };
+      }
+    });
+
+    stage.addEventListener("pointermove", function (e) {
+      if (e.pointerType !== "touch" || !touches[e.pointerId]) return;
+      touches[e.pointerId] = { x: e.clientX, y: e.clientY };
+      var ids = Object.keys(touches);
+      if (!pinch || ids.length !== 2) return;
+      e.preventDefault();
+      var a = touches[ids[0]], b = touches[ids[1]];
+      var d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinch.d0 > 10) setZoom(pinch.z0 * (d / pinch.d0), true);
+    }, { passive: false });
+
+    ["pointerup", "pointercancel", "pointerleave"].forEach(function (ev) {
+      stage.addEventListener(ev, function (e) {
+        delete touches[e.pointerId];
+        if (Object.keys(touches).length < 2) pinch = null;
+      });
+    });
   }
 
   function select(id) {

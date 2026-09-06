@@ -856,7 +856,8 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 
 /* ================= icon buttons ================= */
 
-.ico { display: block; line-height: 0; flex: none; }
+/* <i> is the wrapper, not an instruction — a glyph inside it would lean. */
+.ico { display: block; line-height: 0; flex: none; font-style: normal; }
 .ico svg { width: 15px; height: 15px; display: block; }
 .ico.sym { font-size: 15px; line-height: 1; font-family: var(--sans); }
 

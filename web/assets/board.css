@@ -578,13 +578,14 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 .handle.ne { right: -6px; top: -6px; cursor: nesw-resize; }
 .handle.sw { left: -6px; bottom: -6px; cursor: nesw-resize; }
 .handle.se { right: -6px; bottom: -6px; cursor: nwse-resize; }
+/* Positioned from JS in viewport space (see placeRotHandle) — beside the item
+   where there is room, inside it when the photo is larger than the screen. The
+   connector line is gone with the fixed position: a tether drawn to a dot that
+   moves reads as a mistake. */
 .handle.rot {
-  left: 50%; top: -30px; margin-left: -6px; cursor: grab;
-  background: #14170f; border-color: var(--moss);
-}
-.handle.rot::before {
-  content: ""; position: absolute; left: 50%; top: 11px;
-  width: 1.5px; height: 18px; background: var(--moss); transform: translateX(-50%);
+  left: 0; top: 0; right: auto; bottom: auto;
+  margin-left: -6px; margin-top: -6px; cursor: grab;
+  background: #14170f; border-color: var(--moss); border-width: 2px;
 }
 
 /* Fingers, not cursors: Apple asks for 44pt of tappable area, Material for 48dp.
@@ -596,8 +597,7 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   .handle.ne { right: -10px; top: -10px; }
   .handle.sw { left: -10px; bottom: -10px; }
   .handle.se { right: -10px; bottom: -10px; }
-  .handle.rot { top: -42px; margin-left: -10px; }
-  .handle.rot::before { top: 18px; height: 24px; width: 2px; }
+  .handle.rot { margin-left: -10px; margin-top: -10px; }
   .handle::after {
     content: ""; position: absolute; inset: -13px;   /* 46px total target */
   }
@@ -615,7 +615,25 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
    you stop, and a control blinking in and out reads as a glitch. */
 #actions { opacity: 1; transition: opacity .18s ease, transform .18s ease; }
 #actions.away { opacity: 0; transform: translateY(6px); pointer-events: none; }
-#actions button { padding: 5px 9px; font-size: 12px; }
+#actions button { padding: 6px 8px; font-size: 12px; }
+/* the three type faces are the one place a letterform says it better than a mark */
+#actions .face { font-size: 13px; min-width: 30px; justify-content: center; }
+#actions .face-display { font-family: var(--display); }
+#actions .face-sans { font-family: var(--sans); }
+#actions .face-mono { font-family: var(--mono); font-size: 11px; }
+
+/* Destructive controls carry a tint rather than a coloured mark: the icon stays
+   legible, and the button itself is what reads as dangerous. */
+#actions .danger, #crop-cancel {
+  background: rgba(196, 87, 75, .16);
+  border-color: rgba(196, 87, 75, .42);
+  color: var(--birch);
+}
+#actions .danger:hover, #crop-cancel:hover {
+  background: rgba(196, 87, 75, .3);
+  border-color: var(--rowan);
+  color: var(--birch);
+}
 /* the popover for picking a sticker */
 #stickers {
   position: fixed; z-index: 46;
@@ -674,14 +692,20 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 }
 #crop-aspects { display: flex; gap: 3px; }
 
+/* Undo/redo for the crop itself, docked left of Reset. Same rule as the
+   toolbar: nothing to undo, nothing to show — and the title gives up width
+   first, since it ellipses and the buttons cannot. */
+#crop-history {
+  display: inline-flex; gap: 3px; align-items: center;
+  max-width: 0; opacity: 0; overflow: hidden;
+  transition: max-width .28s ease, opacity .2s ease;
+}
+.crop-head.showhistory #crop-history { max-width: 96px; opacity: 1; }
+
 /* Discarding the crop is the one action here you cannot take back, so it wears
    the warning colour rather than waiting for a hover to admit what it does.
    Id-level, because .ghost and the global hover rule both outrank a class. */
-#crop-cancel { color: var(--rowan); }
-#crop-cancel:hover {
-  color: var(--rowan); border-color: var(--rowan);
-  background: rgba(196, 87, 75, .14);
-}
+
 #crop-aspects button { padding: 4px 9px; font-size: 11.5px; font-family: var(--mono); }
 
 .crop-stage { position: relative; overflow: hidden; display: grid; place-items: center; min-width: 0; }
@@ -729,14 +753,15 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   .crop-head { flex-wrap: wrap; gap: 6px; padding: 9px 10px; align-items: center; }
   .crop-head .pb-label, .crop-head .grow, .crop-head .sep { display: none; }
   #crop-title { order: 1; flex: 1 1 0; }
-  #crop-reset  { order: 2; flex: none; }
-  #crop-cancel { order: 3; flex: none; }
-  #crop-apply  { order: 4; flex: none; }
-  .crop-head > button { padding: 9px 11px; }
+  #crop-history { order: 2; flex: none; }
+  #crop-reset  { order: 3; flex: none; }
+  #crop-cancel { order: 4; flex: none; }
+  #crop-apply  { order: 5; flex: none; }
+  .crop-head > button, #crop-history button { padding: 9px 11px; }
 
   /* one row, every ratio the same width — no scrolling past the ones you want */
   #crop-aspects {
-    order: 5; flex: 1 0 100%; min-width: 0;
+    order: 6; flex: 1 0 100%; min-width: 0;
     display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px;
   }
   #crop-aspects button {

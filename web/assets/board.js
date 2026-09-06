@@ -1542,9 +1542,15 @@
     }, { passive: false });
   }
 
+  /* Selecting raises. With no front/back buttons the stacking has to follow
+     what you are working on, and on a phone a photo you cannot see is a photo
+     you cannot edit. Deliberately not snapshotted: raising is a side effect of
+     looking at something, and an undo stack full of those buries the real edits. */
   function select(id) {
     if (sel === id) return;
     sel = id;
+    var it = id == null ? null : itemById(id);
+    if (it && it.z !== topZ()) { it.z = topZ() + 1; save(); }
     render();
   }
 
@@ -1560,23 +1566,30 @@
     window.addEventListener("pointerup", up);
   }
 
+  /* Nothing is recorded until the pointer actually moves. Snapshotting on
+     pointerdown meant every tap-to-select pushed an undo entry — and worse,
+     unpinned an anchored sticker without moving it a pixel. */
   function startMove(e, it) {
-    snapshot();
-    delete it.fx; delete it.fy; delete it.anchor;   // moved by hand, so stop auto-placing it
     var p0 = pagePoint(e), x0 = it.x, y0 = it.y;
     var node = page.querySelector('.item[data-id="' + it.id + '"]');
+    var began = false;
     drag(function (e2) {
       var p = pagePoint(e2);
+      if (!began) {
+        began = true;
+        snapshot();
+        delete it.fx; delete it.fy; delete it.anchor;   // moved by hand, so stop auto-placing it
+      }
       var nx = x0 + (p.x - p0.x), ny = y0 + (p.y - p0.y);
       if (!e2.altKey) { nx = Math.round(nx / GRID) * GRID; ny = Math.round(ny / GRID) * GRID; }
       it.x = Math.round(nx); it.y = Math.round(ny);
       if (node) { node.style.left = it.x + "px"; node.style.top = it.y + "px"; }
       placeActions();
-    }, growPage);
+    }, function () { if (began) growPage(); });
   }
 
   function startResize(e, it, corner) {
-    snapshot();
+    var began = false;
     var sx = corner[1] === "e" ? 1 : -1;
     var sy = corner[0] === "s" ? 1 : -1;
     var rad = (it.rot || 0) * Math.PI / 180;
@@ -1593,6 +1606,7 @@
     var node = page.querySelector('.item[data-id="' + it.id + '"]');
 
     drag(function (e2) {
+      if (!began) { began = true; snapshot(); }
       var p = pagePoint(e2);
       var dx = p.x - Fwx, dy = p.y - Fwy;
       var lx = dx * cos + dy * sin;          // rotate world delta into the item's frame
@@ -1625,7 +1639,7 @@
      and the item snaps to a new angle the instant you touch the handle. The
      delta is flip-independent: d(handle angle) always equals d(rot). */
   function startRotate(e, it) {
-    snapshot();
+    var began = false;
     var cx = it.x + it.w / 2, cy = it.y + it.h / 2;
     var p0 = pagePoint(e);
     var a0 = Math.atan2(p0.y - cy, p0.x - cx) * 180 / Math.PI;
@@ -1633,6 +1647,7 @@
     var node = page.querySelector('.item[data-id="' + it.id + '"]');
 
     drag(function (e2) {
+      if (!began) { began = true; snapshot(); }
       var p = pagePoint(e2);
       var a = Math.atan2(p.y - cy, p.x - cx) * 180 / Math.PI;
       /* Free by default, Shift to snap. Snapping unconditionally meant grabbing
@@ -1682,6 +1697,65 @@
 
     actions.style.left = Math.round(left) + "px";
     actions.style.top = Math.round(top) + "px";
+
+    placeRotHandle(it, r, s);
+  }
+
+  /* The rotation handle used to sit above the item, where the action bar covers
+     it — on a phone that made rotation unreachable. It now sits beside the item,
+     right by preference and left when the right would fall outside the stage,
+     and when the photo is zoomed larger than the screen it comes inside so
+     there is always something to grab.
+
+     It is placed in viewport space and mapped back into the item's own
+     coordinates, because the handle lives inside the rotated, possibly flipped
+     element: undo the rotation, then the flips. The rotation maths itself needs
+     no adjustment — it tracks the change in angle from wherever you grabbed. */
+  function placeRotHandle(it, r, s) {
+    var h = page.querySelector('.item[data-id="' + it.id + '"] .handle.rot');
+    if (!h) return;
+
+    var out = 26;                                   // how far clear of the edge
+    var rightX = r.left + (it.x + it.w) * zoom + out;
+    var leftX = r.left + it.x * zoom - out;
+    var vx = rightX <= s.right - 12 ? rightX
+           : leftX >= s.left + 12 ? leftX
+           : Math.min(s.right - 26, Math.max(s.left + 26, rightX));
+    var vy = Math.min(s.bottom - 26, Math.max(s.top + 26,
+             r.top + (it.y + it.h / 2) * zoom));
+
+    var cx = r.left + (it.x + it.w / 2) * zoom;
+    var cy = r.top + (it.y + it.h / 2) * zoom;
+    var dx = (vx - cx) / zoom, dy = (vy - cy) / zoom;
+
+    var t = -(it.rot || 0) * Math.PI / 180;
+    var lx = dx * Math.cos(t) - dy * Math.sin(t);
+    var ly = dx * Math.sin(t) + dy * Math.cos(t);
+    if (it.flipX) lx = -lx;
+    if (it.flipY) ly = -ly;
+
+    h.style.left = (it.w / 2 + lx) + "px";
+    h.style.top = (it.h / 2 + ly) + "px";
+  }
+
+  /* Drawn, not typed. Every one of these was a glyph, which meant each device
+     picked its own shape for them — and the pair that mattered most, remove and
+     duplicate, were the two least reliably covered. */
+  var ICON = {
+    rotL:  '<path d="M3.6 8a4.4 4.4 0 1 0 1.5-3.3"/><path d="M2.6 2.4v3.2h3.2"/>',
+    rotR:  '<path d="M12.4 8a4.4 4.4 0 1 1-1.5-3.3"/><path d="M13.4 2.4v3.2h-3.2"/>',
+    flipX: '<path d="M8 2.2v11.6"/><path d="M6 4.8 2.6 8 6 11.2z"/><path d="M10 4.8 13.4 8 10 11.2z"/>',
+    flipY: '<path d="M2.2 8h11.6"/><path d="M4.8 6 8 2.6 11.2 6z"/><path d="M4.8 10 8 13.4 11.2 10z"/>',
+    crop:  '<path d="M4.9 1.7v9.4h9.4"/><path d="M1.7 4.9h9.4v9.4"/>',
+    circle:'<circle cx="8" cy="8" r="5.4"/>',
+    square:'<rect x="2.8" y="2.8" width="10.4" height="10.4" rx="1.6"/>',
+    frame: '<rect x="1.9" y="1.9" width="12.2" height="12.2" rx="1.4"/><rect x="4.9" y="4.9" width="6.2" height="6.2" rx="0.8"/>',
+    dup:   '<rect x="2.2" y="2.2" width="8.4" height="8.4" rx="1.6"/><path d="M5.4 13.8h6.2a2.2 2.2 0 0 0 2.2-2.2V5.4"/>',
+    trash: '<path d="M2.9 4.4h10.2"/><path d="M6.5 4.4V2.9h3v1.5"/><path d="M4.2 4.4l.7 8.4a1.2 1.2 0 0 0 1.2 1.1h3.8a1.2 1.2 0 0 0 1.2-1.1l.7-8.4"/><path d="M6.9 7v4M9.1 7v4"/>'
+  };
+  function svg(paths) {
+    return '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + paths + "</svg>";
   }
 
   function buildActions(it) {
@@ -1692,27 +1766,27 @@
 
     /* Controls only — the photo's name and id are drawn on the photo itself. */
     if (it.kind === "sticker") {
-      actions.appendChild(btn("↺", function () { nudgeRot(it, -15); }, "Rotate 15° left"));
-      actions.appendChild(btn("↻", function () { nudgeRot(it, 15); }, "Rotate 15° right"));
-      actions.appendChild(btn("⇄", function () {
+      actions.appendChild(btn(ICON.rotL, function () { nudgeRot(it, -15); }, "Rotate 15° left"));
+      actions.appendChild(btn(ICON.rotR, function () { nudgeRot(it, 15); }, "Rotate 15° right"));
+      actions.appendChild(btn(ICON.flipX, function () {
         snapshot(); it.flipX = !it.flipX; render(); save();
       }, "Flip horizontally", !!it.flipX));
-      actions.appendChild(btn("⇅", function () {
+      actions.appendChild(btn(ICON.flipY, function () {
         snapshot(); it.flipY = !it.flipY; render(); save();
       }, "Flip vertically", !!it.flipY));
     }
 
     if (it.kind === "photo") {
-      actions.appendChild(btn("Crop", function () { openCrop(it); }, "Crop this photo"));
+      actions.appendChild(btn(ICON.crop, function () { openCrop(it); }, "Crop this photo"));
 
-      actions.appendChild(btn(it.shape === "circle" ? "◯" : "▢", function () {
+      actions.appendChild(btn(it.shape === "circle" ? ICON.circle : ICON.square, function () {
         snapshot();
         it.shape = it.shape === "circle" ? "rect" : "circle";
         render(); save();
       }, "Rectangle or circle", it.shape === "circle"));
 
       var frames = [null, "white", "black", "hair"];
-      actions.appendChild(btn("▣", function () {
+      actions.appendChild(btn(ICON.frame, function () {
         snapshot();
         it.frame = frames[(frames.indexOf(it.frame || null) + 1) % frames.length];
         render(); save();
@@ -1721,9 +1795,12 @@
 
     if (it.kind === "text") {
       ["display", "sans", "mono"].forEach(function (f) {
-        actions.appendChild(btn(f === "display" ? "Aa" : f === "sans" ? "Aa" : "Aa", function () {
-          snapshot(); it.font = f; render(); save();
-        }, f + " face", it.font === f));
+        var b = document.createElement("button");
+        b.textContent = "Aa";
+        b.className = "face face-" + f + (it.font === f ? " on" : "");
+        b.title = f + " face";
+        b.onclick = function () { snapshot(); it.font = f; render(); save(); };
+        actions.appendChild(b);
       });
       var col = document.createElement("input");
       col.type = "color"; col.value = it.color; col.title = "Text colour";
@@ -1731,19 +1808,15 @@
       actions.appendChild(col);
     }
 
-    actions.appendChild(btn("↑", function () { snapshot(); it.z = topZ() + 1; render(); save(); }, "Bring to front"));
-    actions.appendChild(btn("↓", function () {
-      snapshot();
-      var min = board.items.reduce(function (m, i) { return Math.min(m, i.z); }, 0);
-      it.z = min - 1; render(); save();
-    }, "Send to back"));
-    actions.appendChild(btn("⧉", function () { duplicate(it); }, "Duplicate (Ctrl+D)"));
-    actions.appendChild(btn("✕", function () { remove(it); }, "Remove (Del)", false, "danger"));
+    /* No bring-to-front / send-to-back: selecting already raises. */
+    actions.appendChild(btn(ICON.dup, function () { duplicate(it); }, "Duplicate (Ctrl+D)"));
+    actions.appendChild(btn(ICON.trash, function () { remove(it); }, "Remove (Del)", false, "danger"));
 
-    function btn(label, fn, title, on, cls) {
+    function btn(paths, fn, title, on, cls) {
       var b = document.createElement("button");
-      b.textContent = label;
+      b.innerHTML = '<i class="ico">' + svg(paths) + "</i>";
       b.title = title;
+      b.setAttribute("aria-label", title);
       if (on) b.className = "on";
       if (cls) b.className = (b.className + " " + cls).trim();
       b.onclick = fn;
@@ -1802,6 +1875,8 @@
     if (img.complete && img.naturalWidth) layoutCrop(it, it.crop || [0, 0, 100, 100]);
 
     buildRatios();
+    cropHist.length = 0; cropFuture.length = 0;
+    syncCropHist();
   }
 
   function layoutCrop(it, c) {
@@ -1832,6 +1907,30 @@
 
   /* The live rectangle as percentages of the source image — the form the board
      stores, and the form layoutCrop takes back when the stage changes size. */
+  /* The cropper edits a rectangle, not the board, so it keeps its own two
+     stacks. Same rule as the toolbar: the buttons only exist once there is
+     something to undo, and they fold away again when you get back to the start. */
+  var cropHist = [], cropFuture = [];
+
+  function cropState() { return { rect: Object.assign({}, crop.rect), ratio: crop.ratio }; }
+  function applyCropState(st) {
+    crop.rect = Object.assign({}, st.rect);
+    crop.ratio = st.ratio;
+    buildRatios(); paintCrop(); syncCropHist();
+  }
+  function pushCropHist() {
+    if (!crop) return;
+    cropHist.push(cropState());
+    if (cropHist.length > 40) cropHist.shift();
+    cropFuture.length = 0;
+    syncCropHist();
+  }
+  function syncCropHist() {
+    document.getElementById("crop-undo").disabled = !cropHist.length;
+    document.getElementById("crop-redo").disabled = !cropFuture.length;
+    document.querySelector(".crop-head").classList.toggle("showhistory", cropHist.length > 0);
+  }
+
   function cropPercent() {
     var d = crop.disp, R = crop.rect;
     return [
@@ -1858,6 +1957,7 @@
       b.textContent = a.label;
       b.className = crop && crop.ratio === a.r ? "on" : "";
       b.onclick = function () {
+        pushCropHist();
         crop.ratio = a.r;
         if (a.r) applyRatio();
         buildRatios();
@@ -1880,28 +1980,53 @@
   function wireCropper() {
     var rect = document.getElementById("crop-rect");
 
+    /* Two coordinate fixes live here.
+
+       The rect and the image are positioned inside .crop-stage, so every value
+       in crop.disp / crop.rect is stage-relative — but the pointer arrives in
+       viewport coordinates. Comparing them directly put everything out by the
+       height of the header, which grew to two rows on a phone and made the
+       error impossible to miss.
+
+       And a corner used to jump to the pointer. The handle is 22px with a 46px
+       touch target, so a finger lands up to 23px from the corner it grabbed;
+       carrying that offset through the drag is what makes it feel attached. */
+    function stagePoint(e) {
+      var box = document.getElementById("crop-stage").getBoundingClientRect();
+      return { x: e.clientX - box.left, y: e.clientY - box.top };
+    }
+
     rect.addEventListener("pointerdown", function (e) {
       if (!crop) return;
       e.preventDefault();
       e.stopPropagation();
       var ch = e.target.dataset ? e.target.dataset.ch : null;
-      var start = { x: e.clientX, y: e.clientY };
+      var start = stagePoint(e);
       var R0 = Object.assign({}, crop.rect);
       var d = crop.disp;
+      pushCropHist();
+
+      // where the grabbed corner sits relative to the finger, kept for the drag
+      var off = { x: 0, y: 0 };
+      if (ch) {
+        off.x = (ch[1] === "e" ? R0.x + R0.w : R0.x) - start.x;
+        off.y = (ch[0] === "s" ? R0.y + R0.h : R0.y) - start.y;
+      }
 
       function move(e2) {
-        var dx = e2.clientX - start.x, dy = e2.clientY - start.y;
+        var p = stagePoint(e2);
         var R = crop.rect;
 
         if (!ch) {
+          var dx = p.x - start.x, dy = p.y - start.y;
           R.x = Math.max(d.x, Math.min(d.x + d.w - R0.w, R0.x + dx));
           R.y = Math.max(d.y, Math.min(d.y + d.h - R0.h, R0.y + dy));
         } else {
           var east = ch[1] === "e", south = ch[0] === "s";
           var fx = east ? R0.x : R0.x + R0.w;         // the edge that stays put
           var fy = south ? R0.y : R0.y + R0.h;
-          var px = Math.max(d.x, Math.min(d.x + d.w, e2.clientX));
-          var py = Math.max(d.y, Math.min(d.y + d.h, e2.clientY));
+          var px = Math.max(d.x, Math.min(d.x + d.w, p.x + off.x));
+          var py = Math.max(d.y, Math.min(d.y + d.h, p.y + off.y));
 
           var w = Math.max(24, Math.abs(px - fx));
           var h = Math.max(24, Math.abs(py - fy));
@@ -1930,8 +2055,20 @@
       window.addEventListener("pointerup", up);
     });
 
+    document.getElementById("crop-undo").onclick = function () {
+      if (!crop || !cropHist.length) return;
+      cropFuture.push(cropState());
+      applyCropState(cropHist.pop());
+    };
+    document.getElementById("crop-redo").onclick = function () {
+      if (!crop || !cropFuture.length) return;
+      cropHist.push(cropState());
+      applyCropState(cropFuture.pop());
+    };
+
     document.getElementById("crop-reset").onclick = function () {
       if (!crop) return;
+      pushCropHist();
       crop.rect = { x: crop.disp.x, y: crop.disp.y, w: crop.disp.w, h: crop.disp.h };
       crop.ratio = 0;
       buildRatios(); paintCrop();

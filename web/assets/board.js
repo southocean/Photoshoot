@@ -264,12 +264,21 @@
     });
 
     pagebar.appendChild(mk("+", addBoard.bind(null, null), "New board", null, "Board"));
-    pagebar.appendChild(mk("⧉", function () { addBoard(board); }, "Duplicate this board", null, "Duplicate"));
+    var DUP_ICON =
+      '<svg viewBox="0 0 16 16" aria-hidden="true">' +
+      '<rect x="2.2" y="2.2" width="8.4" height="8.4" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.5"/>' +
+      '<path d="M5.4 13.8h6.2a2.2 2.2 0 0 0 2.2-2.2V5.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
+      '</svg>';
+    pagebar.appendChild(mk(DUP_ICON, function () { addBoard(board); }, "Duplicate this board", null, "Duplicate"));
 
+    /* A glyph, or drawn markup when the glyph is not the same shape on every
+       platform — iOS renders the arrow characters as something else entirely. */
     function mk(sym, fn, title, cls, label) {
+      var drawn = sym.charAt(0) === "<";
       var b = document.createElement("button");
       b.className = "ghost" + (cls ? " " + cls : "");
-      b.innerHTML = '<i class="ico sym">' + esc(sym) + '</i>' +
+      b.innerHTML = '<i class="ico' + (drawn ? '' : ' sym') + '">' +
+        (drawn ? sym : esc(sym)) + '</i>' +
         (label ? '<span class="lbl">' + esc(label) + "</span>" : "");
       b.title = title;
       b.setAttribute("aria-label", title);

@@ -279,6 +279,15 @@
   function syncUndo() {
     document.getElementById("undo").disabled = !undoStack.length;
     document.getElementById("redo").disabled = !redoStack.length;
+    syncIdSlot();
+  }
+
+  /* On a narrow bar the name holds the space until there is history worth
+     showing, then hands it over. Two dead buttons are worse than a wordmark. */
+  function syncIdSlot() {
+    var slot = document.getElementById("idslot");
+    if (!slot) return;
+    slot.classList.toggle("showhistory", !!(undoStack.length || redoStack.length));
   }
 
   function itemById(id) {
@@ -933,11 +942,14 @@
   var OVERFLOW = ["add-text", "add-swatch", "add-sticker", "arrange",
                   "grounds", "png", "json", "import", "sizes"];
   var homes = null;     // where each overflow node lives on a wide screen
+  var histHome = null;  // and where the undo/redo pair lives there
   var narrow = null;
 
   function isNarrow() { return window.innerWidth <= NARROW; }
 
   function rememberHomes() {
+    var hist = document.getElementById("history");
+    if (hist) histHome = { parent: hist.parentNode, next: hist.nextSibling };
     homes = OVERFLOW.map(function (id) {
       var el = document.getElementById(id);
       return el ? { el: el, parent: el.parentNode, next: el.nextSibling } : null;
@@ -957,12 +969,18 @@
     document.getElementById("view-board-tab").textContent = n ? "Board" : "Mood board";
     document.getElementById("view-research-tab").textContent = n ? "Research" : "Market research";
 
+    var slot = document.getElementById("idslot");
+    var hist = document.getElementById("history");
+
     if (n) {
       homes.forEach(function (h) { menu.appendChild(h.el); });
+      slot.appendChild(hist);              // share the brand's space
     } else {
       homes.forEach(function (h) { h.parent.insertBefore(h.el, h.next); });
+      if (histHome) histHome.parent.insertBefore(hist, histHome.next);
       closeMenu();
     }
+    syncIdSlot();
     applyTray();
     refit();
   }
@@ -1166,16 +1184,16 @@
     };
 
     /* Resets THIS board only. Other boards, and every photo in the tray including
-       uploads, are left alone — uploads are deleted one at a time from the tray. */
+       uploads, are left alone — uploads are deleted one at a time from the tray.
+       No confirmation: it takes a snapshot, so undo puts the board back. A prompt
+       to guard a reversible action is just friction. */
     document.getElementById("reset").onclick = function () {
-      if (!confirm("Reset “" + board.name + "” to the default arrangement?\n\n" +
-                   "Your other boards are untouched, and nothing is removed from the photo tray — " +
-                   "uploads are deleted individually from there.")) return;
       snapshot();
       var fresh = buildDefault();
       doc.boards[doc.active] = fresh;
       board = fresh;
       arrange(); sel = null; render(); refit(); save();
+      toast("Board reset — undo to bring it back.");
     };
 
     syncUndo();

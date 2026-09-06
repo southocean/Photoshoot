@@ -153,6 +153,11 @@ body {
 }
 .brand em { font-style: italic; color: var(--moss); }
 
+/* On a wide bar the slot does nothing; on a narrow one it is the shared space
+   the brand hands over to undo/redo once there is history to undo. */
+#idslot { display: contents; }
+#history { display: inline-flex; gap: 3px; align-items: center; }
+
 .sep { width: 1px; height: 22px; background: var(--lichen); margin: 0 4px; }
 .grow { flex: 1 1 12px; }
 
@@ -745,7 +750,21 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   #undo, #redo { padding: 5px 9px; font-size: 14px; line-height: 1; }
   #reset { padding: 5px 10px; font-size: 12px; }
 }
-@media (max-width: 480px) {
-  /* function beats branding once the bar is this tight */
-  .brand { display: none; }
+
+@media (max-width: 820px) {
+  /* One slot, two occupants, cross-faded: the name until the first action,
+     then undo/redo. Fixed width so nothing else in the bar shifts. */
+  #idslot {
+    display: block; position: relative;
+    flex: none; width: 68px; height: 28px;
+  }
+  #idslot > * {
+    position: absolute; left: 0; top: 50%;
+    transform: translateY(-50%);
+    transition: opacity .26s ease, transform .26s ease;
+  }
+  #idslot .brand { margin: 0; }
+  #idslot #history { opacity: 0; transform: translateY(2px); pointer-events: none; }
+  #idslot.showhistory .brand { opacity: 0; transform: translateY(calc(-50% - 8px)); pointer-events: none; }
+  #idslot.showhistory #history { opacity: 1; transform: translateY(-50%); pointer-events: auto; }
 }

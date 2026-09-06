@@ -15,7 +15,7 @@
 <div id="app">
 
   <div id="bar">
-    <span class="brand">Skogs<em>älva</em></span>
+    <span id="idslot"><span class="brand">Skogs<em>älva</em></span></span>
 
     <span class="views">
       <button id="view-board-tab" class="vtab on">Mood board</button>
@@ -43,8 +43,10 @@
 
     <span class="sep"></span>
 
-    <button id="undo" class="ghost" title="Undo (Ctrl+Z)">↶</button>
-    <button id="redo" class="ghost" title="Redo (Ctrl+Shift+Z)">↷</button>
+    <span id="history">
+      <button id="undo" class="ghost" title="Undo (Ctrl+Z)">↶</button>
+      <button id="redo" class="ghost" title="Redo (Ctrl+Shift+Z)">↷</button>
+    </span>
 
     <span class="sep"></span>
     <span class="grounds" id="grounds" title="Board background"></span>

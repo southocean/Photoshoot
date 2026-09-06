@@ -177,8 +177,13 @@ body {
   box-shadow: 0 0 0 3px rgba(163, 190, 113, .16);
 }
 
-#progress .pnode:hover:not(.now) {
-  background: var(--humus-hi); border-color: var(--moss); color: var(--birch);
+/* Hover lifts the ground and nothing else. Borrowing moss for it — as it did —
+   makes a hovered dot indistinguishable from a read one, so the dot under a
+   resting cursor reads as a selection that will not go away. And a touch
+   browser leaves hover applied on whatever you last tapped, which is exactly
+   where that cursor would be sitting. */
+@media (hover: hover) {
+  #progress .pnode:hover:not(.now) { background: var(--humus-hi); }
 }
 #progress .pnode:focus-visible { outline: 2px solid var(--moss); outline-offset: 3px; }
 

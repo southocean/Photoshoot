@@ -863,7 +863,10 @@
       var id = r.id.replace("report-", "");
       var b = document.createElement("button");
       b.className = "idea" + (id === report ? " on" : "");
-      b.textContent = r.dataset.title || id;
+      var full = r.dataset.title || id;
+      b.innerHTML = '<span class="long">' + esc(full) + "</span>" +
+        '<span class="short">' + esc(r.dataset.short || full) + "</span>";
+      b.title = full;
       b.onclick = function () { setReport(id); };
       bar.appendChild(b);
     });
@@ -900,10 +903,15 @@
     document.getElementById("researchbar").classList.toggle("deep", y > SWAP_AT);
     document.getElementById("totop").classList.toggle("away", y < 260);
 
-    // the section whose heading last passed the top of the viewport is "now";
-    // everything above it is read, so the rail fills behind the moving dot
+    /* "Now" is the section you are looking at, so a heading claims the dot as
+       it crosses into the upper part of the viewport — not when it leaves the
+       top, which lit the next dot a whole screen too late. Measured off rects:
+       these headings sit in a scrolling container whose offsetParent is BODY,
+       so offsetTop and scrollTop are not in the same coordinate space. */
+    var hr = host.getBoundingClientRect();
+    var line = hr.top + hr.height * 0.4;
     var secs = sectionsOf(report), at = -1;
-    secs.forEach(function (h, i) { if (h.offsetTop - 80 <= y) at = i; });
+    secs.forEach(function (h, i) { if (h.getBoundingClientRect().top <= line) at = i; });
 
     var nodes = document.querySelectorAll("#progress .pnode");
     nodes.forEach(function (b, i) {
@@ -912,18 +920,31 @@
       b.setAttribute("aria-current", i === at ? "true" : "false");
     });
 
-    // keep the moving dot in view — on a phone the rail is wider than the bar
-    var on = nodes[at];
-    if (on && y > SWAP_AT) {
-      var bar = document.getElementById("progress");
-      var r = on.getBoundingClientRect(), br = bar.getBoundingClientRect();
-      if (r.left < br.left + 10 || r.right > br.right - 10) {
-        bar.scrollTo({ left: on.offsetLeft - br.width / 2 + r.width / 2, behavior: "smooth" });
-      }
-    }
+    if (y > SWAP_AT) centreActiveNode();
+  }
+
+  /* Keep the moving dot in view — on a phone the rail is wider than the bar.
+     The width guard matters: this also runs on the scroll that first opens the
+     rail, and a rail measured mid-transition is narrower than a single node,
+     which turns the centring arithmetic inside out. */
+  function centreActiveNode() {
+    var bar = document.getElementById("progress");
+    if (bar.clientWidth < 60) return;
+    var on = bar.querySelector(".pnode.now");
+    if (!on) return;
+    var r = on.getBoundingClientRect(), br = bar.getBoundingClientRect();
+    if (r.left >= br.left + 10 && r.right <= br.right - 10) return;
+    var to = bar.scrollLeft + (r.left - br.left) - (br.width - r.width) / 2;
+    to = Math.max(0, Math.min(to, bar.scrollWidth - bar.clientWidth));
+    bar.scrollTo({ left: to, behavior: "smooth" });
   }
 
   function wireViews() {
+    // …and once it has finished opening, when there is finally a width to centre into
+    document.getElementById("progress").addEventListener("transitionend", function (e) {
+      if (e.propertyName === "max-width") centreActiveNode();
+    });
+
     document.getElementById("view-board-tab").onclick = function () { setView("board"); };
     document.getElementById("view-research-tab").onclick = function () { setView("research"); };
 

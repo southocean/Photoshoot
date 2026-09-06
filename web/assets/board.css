@@ -115,6 +115,12 @@ body {
 .idea:hover:not(.on) { color: var(--birch); background: var(--humus-hi); border-color: var(--lichen); }
 .idea.on { background: var(--birch); border-color: var(--birch); color: #14170f; font-weight: 500; }
 
+/* "Fantasy photoshoot" is most of the bar on a phone. Once you are reading,
+   the title has already done its job and the short name identifies it. */
+.idea .short { display: none; }
+#researchbar.deep .idea .long { display: none; }
+#researchbar.deep .idea .short { display: inline; }
+
 /* Once you are reading, the report you are not reading gives up its width to
    the progress rail. The one you are reading stays as the heading of the bar. */
 #researchbar.deep .idea:not(.on) {

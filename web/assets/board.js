@@ -930,8 +930,8 @@
   var NARROW = 820;
   /* Secondary tools. On a phone these move into one menu instead of wrapping the
      bar onto four rows; the nodes themselves move, so handlers stay attached. */
-  var OVERFLOW = ["add-text", "add-swatch", "add-sticker", "arrange", "undo", "redo",
-                  "grounds", "png", "json", "import", "reset", "sizes"];
+  var OVERFLOW = ["add-text", "add-swatch", "add-sticker", "arrange",
+                  "grounds", "png", "json", "import", "sizes"];
   var homes = null;     // where each overflow node lives on a wide screen
   var narrow = null;
 
@@ -1026,6 +1026,8 @@
     else tray.style.width = (trayCollapsed ? 0 : trayW) + "px";
     var t = document.getElementById("toggle-tray");
     if (t) t.classList.toggle("on", !trayCollapsed);
+    var h = document.getElementById("tray-handle");
+    if (h) h.setAttribute("aria-expanded", trayCollapsed ? "false" : "true");
     syncScrim();
   }
 
@@ -1068,10 +1070,12 @@
   }
 
   function wireToolbar() {
-    document.getElementById("toggle-tray").onclick = function () {
+    var toggleTray = function () {
       trayCollapsed = !trayCollapsed;
       applyTray(); refit(); save();
     };
+    document.getElementById("toggle-tray").onclick = toggleTray;
+    document.getElementById("tray-handle").onclick = toggleTray;
 
     document.getElementById("add-text").onclick = function () {
       snapshot();

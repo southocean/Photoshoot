@@ -329,6 +329,8 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   min-height: 0;
 }
 #tray.collapsed { border-right: none; overflow: hidden; }
+/* the sheet handle belongs to the phone layout only */
+#tray-handle { display: none; }
 
 #tray-grip {
   position: absolute; top: 0; right: -3px; bottom: 0;
@@ -653,18 +655,49 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   #pagebar-wrap > button { flex: none; }
 
   /* Tray becomes a bottom sheet: a phone is tall, not wide, so a horizontal
-     strip of small tiles costs the board far less than a side column. */
+     strip of small tiles costs the board far less than a side column. Collapsed,
+     it slides down until only its handle shows, so the way back up is visible
+     rather than hidden behind a button somewhere else. */
   #tray {
     position: absolute; left: 0; right: 0; bottom: 0; top: auto; z-index: 40;
-    width: auto !important; height: 252px;
+    width: auto !important; height: 290px;
     flex-direction: column;
-    border-right: none; border-top: 1px solid var(--lichen);
-    box-shadow: 0 -10px 40px rgba(0, 0, 0, .6);
+    border-right: none; border-top: none;
+    background: none;
+    box-shadow: none;
     transform: translateY(0);
-    transition: transform .2s ease;
+    transition: transform .26s cubic-bezier(.22, .61, .36, 1);
   }
-  #tray.collapsed { transform: translateY(101%); box-shadow: none; }
+  #tray.collapsed { transform: translateY(calc(100% - 38px)); }
+
+  #toggle-tray { display: none; }
+  #tray-handle {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    flex: none; height: 38px; width: 100%;
+    border: 1px solid var(--lichen); border-bottom: none;
+    border-radius: 14px 14px 0 0;
+    background: var(--humus-hi);
+    font-size: 13px; font-weight: 600; color: var(--birch);
+    box-shadow: 0 -8px 26px rgba(0, 0, 0, .45);
+  }
+  #tray-handle .chev {
+    width: 0; height: 0;
+    border-left: 5px solid transparent; border-right: 5px solid transparent;
+    border-bottom: 6px solid var(--moss);
+    transition: transform .26s cubic-bezier(.22, .61, .36, 1);
+  }
+  #tray:not(.collapsed) #tray-handle .chev { transform: rotate(180deg); }
+
+  /* the sheet body sits under the handle and carries the surface */
+  .tray-list, .tray-foot {
+    background: var(--humus);
+    border-left: 1px solid var(--lichen); border-right: 1px solid var(--lichen);
+  }
+  .tray-list { border-top: none; }
+
   #tray-grip, .tray-head, .tray-foot .hint { display: none; }
+  /* keep the last of the board clear of the resting handle */
+  #scroller { padding-bottom: 52px; }
   .tray-list { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 6px; padding: 8px; }
   .tray-foot { padding: 8px; grid-auto-flow: column; align-items: center; gap: 10px; }
   .tray-foot .filebtn { padding: 6px 12px; }
@@ -688,4 +721,14 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   /* pinch replaces the step buttons, and the bar has no room for them */
   #zin, #zout { display: none; }
   .zoom span { min-width: 34px; }
+}
+
+@media (max-width: 820px) {
+  /* undo / redo / reset live in the bar now; keep them compact */
+  #undo, #redo { padding: 5px 9px; font-size: 14px; line-height: 1; }
+  #reset { padding: 5px 10px; font-size: 12px; }
+}
+@media (max-width: 480px) {
+  /* function beats branding once the bar is this tight */
+  .brand { display: none; }
 }

@@ -1,4 +1,4 @@
-# Validation plan — the next 8 weeks
+# Validation plan: the next 8 weeks
 
 The market research in [01-market-research.md](01-market-research.md) is desk research. It tells you what is plausible. It cannot tell you whether Swedes will pay. Only these five tests can, and all of them cost under a few thousand kronor.
 
@@ -6,7 +6,7 @@ The market research in [01-market-research.md](01-market-research.md) is desk re
 
 ---
 
-## Test 1 — The aesthetic A/B (free, highest information)
+## Test 1: The aesthetic A/B (free, highest information)
 
 **Question:** are we selling to Swedes or to the diaspora?
 
@@ -21,7 +21,7 @@ The market research in [01-market-research.md](01-market-research.md) is desk re
 
 ---
 
-## Test 2 — Price-visible landing page (~200 kr)
+## Test 2: Price-visible landing page (~200 kr)
 
 **Question:** does anyone want this at 6,900 kr?
 
@@ -33,11 +33,11 @@ Do not hide the price. A waitlist that doesn't show a price measures curiosity; 
 
 ---
 
-## Test 3 — Founding client offer (this is the real test)
+## Test 3: Founding client offer (this is the real test)
 
 **Question:** will people give us money?
 
-Sell **6–8 founding-client slots at 1,900 kr** — clearly framed as a discounted first cohort, in exchange for full usage rights to the images and a recorded 20-minute conversation afterwards.
+Sell **6–8 founding-client slots at 1,900 kr**: clearly framed as a discounted first cohort, in exchange for full usage rights to the images and a recorded 20-minute conversation afterwards.
 
 Money changing hands is the only validation that counts. A hundred people saying "that looks amazing" is worth less than one person paying 1,900 kr.
 
@@ -45,7 +45,7 @@ Money changing hands is the only validation that counts. A hundred people saying
 
 ---
 
-## Test 4 — Twenty conversations
+## Test 4: Twenty conversations
 
 **Question:** what is the actual job people would hire this for?
 
@@ -56,7 +56,7 @@ Twenty people, 20 minutes each. Mix: Swedish women 25–40, diaspora, a cosplaye
 1. When did you last pay a photographer for pictures of yourself? What was the occasion?
 2. What did it cost? Was it worth it?
 3. What did you do with the photos afterwards?
-4. Have you ever dressed up as an adult — party, LARP, Halloween, festival? Tell me about it.
+4. Have you ever dressed up as an adult: party, LARP, Halloween, festival? Tell me about it.
 5. *(Show the mood board.)* What's your honest first reaction?
 6. Who do you know who'd love this? Who'd find it embarrassing?
 7. What would have to be true for you to spend 6,900 kr on a day like this?
@@ -67,7 +67,7 @@ Question 5 is where you find out whether Jantelagen kills you. Watch faces, not 
 
 ---
 
-## Test 5 — Rental demand probe (near-free)
+## Test 5: Rental demand probe (near-free)
 
 **Question:** is the rental line real?
 
@@ -77,7 +77,7 @@ Once you own wings and a costume or two, list them for rent in Swedish cosplay, 
 
 ---
 
-## Decision gate — mid-November
+## Decision gate: mid-November
 
 Sit down together and be honest.
 
@@ -88,4 +88,4 @@ Sit down together and be honest.
 | Enquiries but nobody pays | **Price or product problem.** Test a lower tier, or find out what they actually wanted and weren't offered |
 | Neither enquiries nor bookings | **Stop.** You will have spent ~10,000 kr and one autumn to learn something true. That is a cheap answer to an expensive question |
 
-Agree now, in writing, while it costs nothing to be honest. The hardest part of this plan is not running the tests — it is believing the results when they're disappointing.
+Agree now, in writing, while it costs nothing to be honest. The hardest part of this plan is not running the tests: it is believing the results when they're disappointing.

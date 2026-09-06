@@ -7,24 +7,24 @@ Two things live here: the market research behind the idea, and the planning mate
 
 ## The mood board
 
-Open **[`web/index.html`](web/index.html)** in a browser. It works straight from disk — no server, no build step.
+Open **[`web/index.html`](web/index.html)** in a browser. It works straight from disk: no server, no build step.
 
 - **Click** a card to open it full-screen. **Scroll or double-click** to zoom, **drag** to pan
 - **← / →** move between images, **S** shortlists, **Esc** closes
 - **Drag cards** to rearrange the board
 - **★** to shortlist, then "Shortlist only" to see just the picks
 - Each image carries two notes: **what to steal** from it, and **what to change** for a Swedish audience
-- Type your own notes in the panel — they save in your browser
+- Type your own notes in the panel: they save in your browser
 - **Drag image files onto the page** to add your own finds
 - **Export / Import** to send your version of the board to someone else
 
-Everything you change is stored in *your* browser only. That is a real limitation — see below.
+Everything you change is stored in *your* browser only. That is a real limitation: see below.
 
 ### Adding more photos properly
 Drop the files in `web/images/`, then add an entry to `web/assets/data.js`. The `crop` field is a percentage rectangle `{x, y, w, h}` of the source file, so phone screenshots can have their UI chrome cropped away without editing the image.
 
 ### About collaboration
-This board is static, so your friends cannot edit the same copy. **Use a shared Pinterest board for collecting and this board for deciding** — the "Link a shared board…" button stores that URL. Rationale is in the discussion notes; short version: collecting is divergent and belongs somewhere everyone already has an account, deciding is convergent and benefits from the opinionated structure here.
+This board is static, so your friends cannot edit the same copy. **Use a shared Pinterest board for collecting and this board for deciding**: the "Link a shared board…" button stores that URL. Rationale is in the discussion notes; short version: collecting is divergent and belongs somewhere everyone already has an account, deciding is convergent and benefits from the opinionated structure here.
 
 ---
 
@@ -44,7 +44,7 @@ This board is static, so your friends cannot edit the same copy. **Use a shared 
 
 1. **Sweden buys transformation and milestones, not status display.** The Vietnamese framing ("look beautiful and prestigious") runs straight into Jantelagen. The same shoot sold as play, craft and a rite of passage does not.
 
-2. **Use the Nordic fantasy canon.** Skogsrå, huldra, John Bauer's forests, Midsommar flower crowns. Same wings, same craft, completely different cultural permission — and no competitor is doing it.
+2. **Use the Nordic fantasy canon.** Skogsrå, huldra, John Bauer's forests, Midsommar flower crowns. Same wings, same craft, completely different cultural permission, and no competitor is doing it.
 
 3. **The economics only work batched.** One private client a day with a hired makeup artist leaves almost nothing. The studios you're copying run several clients through one set-up. Design for that from the start.
 

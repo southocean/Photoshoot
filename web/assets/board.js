@@ -127,7 +127,7 @@
         ui: { trayW: trayW, trayCollapsed: trayCollapsedWide, view: view, report: report, zoom: zoom, fitOn: fitOn }
       }));
     } catch (e) {
-      toast("Could not save — browser storage is full. Delete a photo from the tray, or export the board.");
+      toast("Could not save: browser storage is full. Delete a photo from the tray, or export the board.");
     }
     // Always after the write: callers do render() then save(), so a meter drawn
     // during render() would be reporting the previous state.
@@ -209,7 +209,7 @@
       b = { name: "New look", bg: board.bg, w: board.w, h: 700, items: [
         { id: ++uid, kind: "text", text: "LOOK NAME", font: "display", size: 60,
           color: readable(board.bg), x: 40, y: 40, w: 700, h: 76, rot: 0, z: ++uid },
-        { id: ++uid, kind: "text", text: "DIRECTION — one sentence.\nKEYWORDS — three to five words.",
+        { id: ++uid, kind: "text", text: "DIRECTION: one sentence.\nKEYWORDS: three to five words.",
           font: "mono", size: 15, color: "#a3be71", x: 40, y: 132, w: 700, h: 60, rot: 0, z: ++uid }
       ] };
     }
@@ -221,7 +221,7 @@
   }
 
   function renameBoard() {
-    var n = prompt("Name this board — use the look it briefs, e.g. “Skogsrå — dark nymph”.", board.name);
+    var n = prompt("Name this board after the look it briefs, e.g. “Skogsrå, dark nymph”.", board.name);
     if (n === null) return;
     snapshot();
     board.name = n.trim() || board.name;
@@ -231,7 +231,7 @@
   /* Closes any board, not just the active one — the tabs each carry their own ×. */
   function deleteBoard(i) {
     if (i == null) i = doc.active;
-    if (doc.boards.length < 2) { toast("This is the only board — reset it instead of deleting it."); return; }
+    if (doc.boards.length < 2) { toast("This is the only board. Reset it instead of deleting it."); return; }
     if (!confirm("Delete the board “" + doc.boards[i].name + "”? Everything on it goes with it.")) return;
     snapshot();
     doc.boards.splice(i, 1);
@@ -248,7 +248,7 @@
     doc.boards.forEach(function (b, i) {
       var t = document.createElement("button");
       t.className = "tab" + (i === doc.active ? " on" : "") + (only ? " only" : "");
-      t.title = b.name + " — " +
+      t.title = b.name + ", " +
         b.items.filter(function (x) { return x.kind === "photo"; }).length + " photos";
 
       var name = document.createElement("span");
@@ -414,7 +414,7 @@
   }
 
   var SIZES = [
-    { key: "tall", label: "Tall", w: 1600, fixedH: 0, title: "Grows as you add — best for collecting" },
+    { key: "tall", label: "Tall", w: 1600, fixedH: 0, title: "Grows as you add, best for collecting" },
     { key: "slide", label: "16:9", w: 1920, fixedH: 1080, title: "Slide-ready, for a deck or a portfolio page" },
     { key: "square", label: "1:1", w: 1400, fixedH: 1400, title: "Square, for Instagram" },
     { key: "a4", label: "A4", w: 1240, fixedH: 1754, title: "A4 portrait, for printing" }
@@ -625,7 +625,7 @@
       b.className = "tile" + (used[p.key] ? " used" : "") + (p.key === activeKey ? " active" : "");
       b.type = "button";
       b.dataset.key = p.key;
-      b.title = titleOf(p.key) + (used[p.key] ? " — already on the board" : " — click to add");
+      b.title = titleOf(p.key) + (used[p.key] ? " (already on the board)" : " (click to add)");
 
       var c = p.crop || [0, 0, 100, 100];
       var f = document.createElement("div");
@@ -689,7 +689,7 @@
              " (" + onBoards.map(function (b) { return b.name; }).join(", ") + ") and will be removed from " +
              (onBoards.length > 1 ? "those too" : "that too") + ".";
     }
-    msg += "\n\nThis cannot be undone by Ctrl+Z — export the board first if you want it back.";
+    msg += "\n\nThis cannot be undone by Ctrl+Z. Export the board first if you want it back.";
     if (!confirm(msg)) return;
 
     doc.boards.forEach(function (b) {
@@ -1217,7 +1217,7 @@
         if (it.kind === "photo") it.span = libOf(it.img) && libOf(it.img).hero ? 2 : 1;
       });
       arrange(); sel = null; render(); refit(); save();
-      toast("Tidied into a grid — drag anything back out of it.");
+      toast("Tidied into a grid. Drag anything back out of it.");
     };
 
     document.getElementById("undo").onclick = undo;
@@ -1286,7 +1286,7 @@
       doc.boards[doc.active] = fresh;
       board = fresh;
       arrange(); sel = null; render(); refit(); save();
-      toast("Board reset — undo to bring it back.");
+      toast("Board reset. Undo to bring it back.");
     };
 
     syncUndo();
@@ -1333,7 +1333,7 @@
     if (b) {
       b.classList.toggle("on", fitOn);
       b.setAttribute("aria-pressed", fitOn ? "true" : "false");
-      b.title = fitOn ? "Auto-fit is on — zoom manually to turn it off" : "Fit the board and keep it fitted";
+      b.title = fitOn ? "Auto-fit is on. Zoom manually to turn it off" : "Fit the board and keep it fitted";
     }
     /* On a narrow bar Fit only earns its space while the board isn't fitted:
        press it, the board fits, and it folds away again. */
@@ -2252,7 +2252,7 @@
             });
             sel = null;
             growPage(); render(); save();
-            toast(added.length + " photo" + (added.length > 1 ? "s" : "") + " added. They live in this browser — export the board to share them.");
+            toast(added.length + " photo" + (added.length > 1 ? "s" : "") + " added. They live in this browser, so export the board to share them.");
           }
         }
       });

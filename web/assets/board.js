@@ -885,7 +885,8 @@
       b.textContent = String(i + 1);
       b.title = name;
       b.setAttribute("aria-label", name);
-      b.onclick = function () { scrollToSection(h); };
+      // no lingering focus ring: the scroll position is what lights a dot
+      b.onclick = function () { b.blur(); scrollToSection(h); };
       bar.appendChild(b);
     });
   }

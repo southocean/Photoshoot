@@ -141,30 +141,47 @@ body {
 #progress::-webkit-scrollbar { display: none; }
 #researchbar.deep #progress { max-width: 100%; opacity: 1; }
 
-.pnode {
+/* Ids throughout: the global `button:hover:not(:disabled):not(.on)` is three
+   classes deep and would otherwise repaint the active dot its plain grey — which
+   is exactly what it did to whichever dot the pointer happened to rest on. */
+#progress .pnode {
   position: relative; flex: none;
   width: 21px; height: 21px; padding: 0;
   display: grid; place-items: center;
   border-radius: 50%;
   background: var(--bark); border: 1px solid var(--lichen);
   font-family: var(--mono); font-size: 9.5px; line-height: 1; color: #6d745f;
-  transition: background .2s, border-color .2s, color .2s, transform .2s;
+  transition: background .2s, border-color .2s, color .2s, box-shadow .2s;
 }
 /* the connector belongs to the gap before its node, so it lights up when that
    node is reached — no separate track element to keep in sync while scrolling */
-.pnode::before {
+#progress .pnode::before {
   content: ""; position: absolute; right: 100%; top: 50%;
   width: 15px; height: 1px; background: var(--lichen);
   transition: background .2s;
 }
-.pnode:first-child::before { display: none; }
-.pnode.past { border-color: var(--moss); color: var(--moss); }
-.pnode.past::before, .pnode.now::before { background: var(--moss); }
-.pnode.now {
-  background: var(--moss); border-color: var(--moss);
-  color: #14170f; font-weight: 500; transform: scale(1.12);
+#progress .pnode:first-child::before { display: none; }
+
+/* read */
+#progress .pnode.past {
+  background: var(--bark); border-color: var(--moss); color: var(--moss);
 }
-.pnode:hover:not(.now) { border-color: var(--moss); color: var(--birch); }
+#progress .pnode.past::before, #progress .pnode.now::before { background: var(--moss); }
+
+/* reading. Scroll position is the only thing that lights a dot: there is no
+   selected state to leave behind, so clicking one and reading on hands the
+   highlight to the next section exactly as scrolling there would. */
+#progress .pnode.now {
+  background: var(--moss); border-color: var(--moss);
+  color: #14170f; font-weight: 500;
+  box-shadow: 0 0 0 3px rgba(163, 190, 113, .16);
+}
+
+#progress .pnode:hover:not(.now) {
+  background: var(--humus-hi); border-color: var(--moss); color: var(--birch);
+}
+#progress .pnode:focus-visible { outline: 2px solid var(--moss); outline-offset: 3px; }
+
 /* a 21px dot is well under the 44pt touch target, so grow the hit area only */
 @media (pointer: coarse) {
   .pnode::after { content: ""; position: absolute; inset: -12px; }
@@ -731,7 +748,7 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   /* every pixel the rail gains is one more section you can see at a time */
   #researchbar { padding: 6px 10px; gap: 8px; }
   #progress { gap: 11px; }
-  .pnode::before { width: 11px; }
+  #progress .pnode::before { width: 11px; }
 
   #pagebar-wrap { padding: 6px 10px; gap: 6px; overflow: hidden; }
   #pagebar-wrap .pb-label { display: none; }

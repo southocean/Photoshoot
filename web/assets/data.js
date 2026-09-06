@@ -114,7 +114,7 @@ window.GROUNDS = ["#211a13", "#1b2016", "#14170f", "#2f2018", "#ede8d9", "#e5d9c
 /* The board as it first opens. Everything on it is movable, resizable, deletable.
    At most two photos per concept — a mood board is defined by what you left off. */
 window.DEFAULT_BOARD = {
-  name: "Höst — all references",
+  name: "Höst",
   bg: "#211a13",
   w: 1600,
   photos: ["17", "11", "14", "07", "18", "25", "22", "15", "19", "23", "04", "08", "01", "20", "05"],

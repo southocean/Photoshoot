@@ -742,7 +742,6 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 }
 
 @media (max-width: 560px) {
-  .brand em { display: none; }
   .vtab { padding: 5px 7px; font-size: 11.5px; }
 }
 
@@ -772,4 +771,33 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   }
   #bar.showhistory .brand { max-width: 0; opacity: 0; margin-right: 0; }
   #bar.showhistory #history { max-width: 78px; opacity: 1; }
+}
+
+/* ================= icon buttons ================= */
+
+.ico { display: block; line-height: 0; flex: none; }
+.ico svg { width: 15px; height: 15px; display: block; }
+.ico.sym { font-size: 15px; line-height: 1; font-family: var(--sans); }
+
+/* Fit, Download, Reset, +, Duplicate read as symbols; the visible name is
+   carried by the tooltip, the accessible one by aria-label. */
+#bar .lbl, #pagebar .lbl {
+  position: absolute; width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip: rect(0 0 0 0); clip-path: inset(50%); overflow: hidden; white-space: nowrap;
+}
+#zfit, #png, #reset, #pagebar .ghost { padding: 5px 9px; }
+
+/* Fit only exists while the board is off its fit scale — squeezes in, and
+   folds itself away the moment you press it. */
+#zfit {
+  max-width: 0; opacity: 0; overflow: hidden;
+  padding-left: 0; padding-right: 0; border-width: 0;
+  transition: max-width .26s ease, opacity .18s ease,
+              padding .26s ease, border-width .26s ease;
+}
+#bar.showfit #zfit { max-width: 40px; opacity: 1; padding-left: 9px; padding-right: 9px; border-width: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  #zfit { transition: none; }
 }

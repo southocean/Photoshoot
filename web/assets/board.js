@@ -263,14 +263,16 @@
       pagebar.appendChild(t);
     });
 
-    pagebar.appendChild(mk("+ Board", addBoard.bind(null, null), "Start an empty board for another look"));
-    pagebar.appendChild(mk("Duplicate", function () { addBoard(board); }, "Copy this board as a starting point"));
+    pagebar.appendChild(mk("+", addBoard.bind(null, null), "New board", null, "Board"));
+    pagebar.appendChild(mk("⧉", function () { addBoard(board); }, "Duplicate this board", null, "Duplicate"));
 
-    function mk(label, fn, title, cls) {
+    function mk(sym, fn, title, cls, label) {
       var b = document.createElement("button");
       b.className = "ghost" + (cls ? " " + cls : "");
-      b.textContent = label;
+      b.innerHTML = '<i class="ico sym">' + esc(sym) + '</i>' +
+        (label ? '<span class="lbl">' + esc(label) + "</span>" : "");
       b.title = title;
+      b.setAttribute("aria-label", title);
       b.onclick = fn;
       return b;
     }
@@ -286,7 +288,7 @@
      showing, then hands it over. Two dead buttons are worse than a wordmark. */
   function syncIdSlot() {
     document.getElementById("bar")
-      .classList.toggle("showhistory", !!(undoStack.length || redoStack.length));
+      .classList.toggle("showhistory", undoStack.length > 0);
   }
 
   function itemById(id) {
@@ -939,7 +941,7 @@
   /* Secondary tools. On a phone these move into one menu instead of wrapping the
      bar onto four rows; the nodes themselves move, so handlers stay attached. */
   var OVERFLOW = ["add-text", "add-swatch", "add-sticker", "arrange",
-                  "grounds", "png", "json", "import", "sizes"];
+                  "grounds", "json", "import", "sizes"];
   var homes = null;     // where each overflow node lives on a wide screen
   var histHome = null;  // and where the undo/redo pair lives there
   var narrow = null;
@@ -1213,16 +1215,19 @@
     page.style.transform = "scale(" + zoom + ")";
     pagewrap.style.width = board.w * zoom + "px";
     pagewrap.style.height = board.h * zoom + "px";
-    if (manual && fitOn) { fitOn = false; syncFit(); }
+    if (manual && fitOn) fitOn = false;
+    syncFit();
     placeActions();
     if (manual) save();
   }
 
-  function fitZoom() {
+  function fitScale() {
     // a phone cannot spare 80px of margin around the board
     var avail = stage.clientWidth - (isNarrow() ? 20 : 80);
-    setZoom(Math.min(1, avail / board.w));
+    return Math.min(1, avail / board.w);
   }
+
+  function fitZoom() { setZoom(fitScale()); }
 
   /* Called wherever the available space changed. Respects the toggle.
      Guards `board` because layout code also runs during boot, before load. */
@@ -1238,6 +1243,10 @@
       b.setAttribute("aria-pressed", fitOn ? "true" : "false");
       b.title = fitOn ? "Auto-fit is on — zoom manually to turn it off" : "Fit the board and keep it fitted";
     }
+    /* On a narrow bar Fit only earns its space while the board isn't fitted:
+       press it, the board fits, and it folds away again. */
+    var off = board ? Math.abs(zoom - fitScale()) > 0.005 : false;
+    document.getElementById("bar").classList.toggle("showfit", off);
   }
   /* The action bar is position:fixed, so it has to be re-placed whenever the
      board scrolls underneath it — otherwise it detaches from its item. */
@@ -2207,7 +2216,26 @@
     g.closePath();
   }
 
+  /* On a phone a plain download lands in Files, not the camera roll. The share
+     sheet is the only route into the photo library from a web page, and it is
+     what "Save Image" on iOS and "Save to Photos" on Android hang off. */
+  function shareToPhotos(blob, name) {
+    if (!isNarrow() || !/^image\//.test(blob.type) || !navigator.canShare) return false;
+    try {
+      var file = new File([blob], name, { type: blob.type });
+      if (!navigator.canShare({ files: [file] })) return false;
+      navigator.share({ files: [file], title: "Mood board" })
+        .then(function () { toast("Choose Save Image to add it to your photos."); })
+        .catch(function (err) {
+          if (err && (err.name === "AbortError" || err.name === "NotAllowedError")) return;
+          anchorSave(name, blob, blob.type);
+        });
+      return true;
+    } catch (e) { return false; }
+  }
+
   function saveFile(name, data, mime) {
+    if (data instanceof Blob && shareToPhotos(data, name)) return;
     if (downloads) {
       downloads.save({ filename: name, data: data }).then(function () {
         toast("Saved " + name);

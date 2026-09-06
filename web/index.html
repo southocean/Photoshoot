@@ -32,7 +32,7 @@
     </span>
 
     <span id="board-tools">
-    <button id="toggle-tray" class="on" title="Show or hide the photo tray">Photos</button>
+    <button id="toggle-tray" class="on" title="Show or hide the photo gallery">Photos</button>
 
     <span class="sep"></span>
 
@@ -57,15 +57,15 @@
       <button id="zout" class="ghost" title="Zoom out">−</button>
       <span id="zlabel">100%</span>
       <button id="zin" class="ghost" title="Zoom in">+</button>
-      <button id="zfit" class="ghost" title="Fit to window">Fit</button>
+      <button id="zfit" class="ghost" title="Fit the board to the window" aria-label="Fit to window"><i class="ico"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6V2.5H6M13.5 6V2.5H10M2.5 10v3.5H6M13.5 10v3.5H10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></i><span class="lbl">Fit</span></button>
     </span>
 
     <span class="sep"></span>
 
-    <button id="png" title="Download the board as an image">Download PNG</button>
+    <button id="png" class="ghost" title="Download the board as an image" aria-label="Download the board as an image"><i class="ico"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.2v7.2m0 0 2.9-2.9M8 9.4 5.1 6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.8 12.6h10.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></i><span class="lbl">Download</span></button>
     <button id="json" title="Save the board to a file you can send on">Export</button>
     <button id="import" title="Load a board someone sent you">Import</button>
-    <button id="reset" class="ghost danger" title="Back to the default arrangement">Reset</button>
+    <button id="reset" class="ghost danger" title="Back to the default arrangement" aria-label="Reset the board"><i class="ico"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8A5 5 0 1 1 11.3 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M13.2 2.2v3.4H9.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></i><span class="lbl">Reset</span></button>
 
     <input type="file" id="import-file" accept="application/json,.json" hidden>
     <input type="file" id="upload-file" accept="image/*" multiple hidden>
@@ -89,10 +89,10 @@
 
     <aside id="tray">
       <button id="tray-handle" aria-expanded="true" aria-controls="tray-list">
-        <span>Photo tray</span><i class="chev" aria-hidden="true"></i>
+        <span>Photo Gallery</span><i class="chev" aria-hidden="true"></i>
       </button>
       <div class="tray-head">
-        <h2>Photo tray</h2>
+        <h2>Photo Gallery</h2>
         <p>Click one to drop it on the board.</p>
       </div>
       <div class="tray-list" id="tray-list"></div>
@@ -105,7 +105,7 @@
         <p class="hint">Or drag image files anywhere onto the page.</p>
       </div>
       <div id="tray-grip" role="separator" aria-orientation="vertical" tabindex="0"
-           aria-label="Drag to resize the photo tray" title="Drag to resize · double-click to reset"></div>
+           aria-label="Drag to resize the photo gallery" title="Drag to resize · double-click to reset"></div>
     </aside>
 
     <div id="stage">

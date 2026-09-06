@@ -81,6 +81,9 @@ body {
   font-size: 13px; line-height: 1; color: inherit; opacity: .5;
 }
 .tab .x:hover { opacity: 1; background: rgba(196, 87, 75, .9); color: #fff; }
+/* With no close button there is nothing to reserve the short right padding
+   for, so the name would sit 6px off-centre. */
+.tab.only { padding-right: 12px; }
 .tab.only .x { display: none; }
 #sizes { display: flex; gap: 3px; }
 #sizes button { padding: 4px 9px; font-size: 11.5px; font-family: var(--mono); }

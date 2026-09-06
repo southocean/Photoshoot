@@ -263,12 +263,18 @@
       pagebar.appendChild(t);
     });
 
-    pagebar.appendChild(mk("+", addBoard.bind(null, null), "New board", null, "Board"));
+    /* Drawn, not typed: a font's "+" is lighter than a 1.6 stroke and sat thin
+       next to the icons beside it. Same weight and caps as the rest now. */
+    var ADD_ICON =
+      '<svg viewBox="0 0 16 16" aria-hidden="true">' +
+      '<path d="M8 3.4v9.2M3.4 8h9.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+      '</svg>';
     var DUP_ICON =
       '<svg viewBox="0 0 16 16" aria-hidden="true">' +
-      '<rect x="2.2" y="2.2" width="8.4" height="8.4" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.5"/>' +
-      '<path d="M5.4 13.8h6.2a2.2 2.2 0 0 0 2.2-2.2V5.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
+      '<rect x="2.2" y="2.2" width="8.4" height="8.4" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+      '<path d="M5.4 13.8h6.2a2.2 2.2 0 0 0 2.2-2.2V5.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
       '</svg>';
+    pagebar.appendChild(mk(ADD_ICON, addBoard.bind(null, null), "New board", null, "Board"));
     pagebar.appendChild(mk(DUP_ICON, function () { addBoard(board); }, "Duplicate this board", null, "Duplicate"));
 
     /* A glyph, or drawn markup when the glyph is not the same shape on every

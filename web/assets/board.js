@@ -1029,6 +1029,7 @@
     var h = document.getElementById("tray-handle");
     if (h) h.setAttribute("aria-expanded", trayCollapsed ? "false" : "true");
     syncScrim();
+    placeActions();
   }
 
   function wireTrayGrip() {
@@ -1239,7 +1240,55 @@
     return { x: (e.clientX - r.left) / zoom, y: (e.clientY - r.top) / zoom };
   }
 
+  /* ==================== touch gestures ====================
+     A finger is ambiguous in a way a mouse never is: the same contact can mean
+     tap, drag, pan or the first half of a pinch, and you cannot know which until
+     it has moved. So a touch starts as `pending` and commits to one meaning only
+     once it passes the slop distance — after which nothing can change it.
+
+       SLOP      8px, Android's touch slop. Under it, a contact is still a tap.
+       HOLD      500ms, the long-press both platforms use.
+       Selection gates dragging: an unselected item pans the canvas, because a
+       finger landing on a photo usually means "scroll", not "move this".
+       A second finger always wins — it cancels whatever one finger was doing
+       and rewinds the item it had begun to move. */
+
+  var SLOP = 8, HOLD = 500;
+
   function wireStage() {
+    var touches = {};        // live touch points, by pointerId
+    var g = null;            // the one-finger gesture in progress
+    var pinch = null;
+    var hold = null;
+
+    function clearHold() { clearTimeout(hold); hold = null; }
+
+    function endGesture() {
+      clearHold();
+      if (g && g.mode === "drag") { growPage(); render(); save(); }
+      g = null;
+    }
+
+    /* A drag that turns out to be a pinch never happened. */
+    function rewind() {
+      clearHold();
+      if (g && g.mode === "drag" && g.item) {
+        g.item.x = g.x0; g.item.y = g.y0;
+        undo();                       // drop the snapshot the drag pushed
+      } else if (g && g.mode === "pan") {
+        // nothing to undo; panning leaves no state
+      }
+      g = null;
+      render();
+    }
+
+    function beginDrag() {
+      g.mode = "drag";
+      snapshot();
+      delete g.item.fx; delete g.item.fy; delete g.item.anchor;
+      g.x0 = g.item.x; g.y0 = g.item.y;
+    }
+
     page.addEventListener("pointerdown", function (e) {
       var handle = e.target.closest(".handle");
       var node = e.target.closest(".item");
@@ -1252,17 +1301,110 @@
         return;
       }
 
-      if (!node) { select(null); return; }
+      if (!node) { if (e.pointerType !== "touch") select(null); return; }
       if (e.target.getAttribute("contenteditable") === "true") return;
-
-      e.preventDefault();
       var item = itemById(+node.dataset.id);
-      select(item.id);
-      startMove(e, item);
+
+      /* A mouse is unambiguous: press means grab. Leave desktop alone. */
+      if (e.pointerType !== "touch") {
+        e.preventDefault();
+        select(item.id);
+        startMove(e, item);
+        return;
+      }
+
+      if (g || Object.keys(touches).length > 1) return;
+      g = {
+        id: e.pointerId, item: item, mode: "pending",
+        sx: e.clientX, sy: e.clientY,
+        x0: item.x, y0: item.y,
+        scrollX: stage.scrollLeft, scrollY: stage.scrollTop,
+        selected: sel === item.id
+      };
+
+      // long-press is the escape hatch: hold an unselected item to grab it now
+      if (!g.selected) {
+        hold = setTimeout(function () {
+          if (!g || g.mode !== "pending") return;
+          select(item.id);
+          g.item = itemById(item.id);
+          beginDrag();
+        }, HOLD);
+      }
     });
 
+    window.addEventListener("pointermove", function (e) {
+      if (!touches[e.pointerId] && !g) return;
+      if (touches[e.pointerId]) touches[e.pointerId] = { x: e.clientX, y: e.clientY };
+
+      if (pinch) {
+        var ids = Object.keys(touches);
+        if (ids.length < 2) return;
+        e.preventDefault();
+        var a = touches[ids[0]], b = touches[ids[1]];
+        var d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (pinch.d0 > 10) setZoom(pinch.z0 * (d / pinch.d0), true);
+        return;
+      }
+
+      if (!g || e.pointerId !== g.id) return;
+      var dx = e.clientX - g.sx, dy = e.clientY - g.sy;
+
+      if (g.mode === "pending") {
+        if (Math.hypot(dx, dy) < SLOP) return;
+        clearHold();
+        // the first real movement decides, and the decision is final
+        if (g.selected) beginDrag();
+        else g.mode = "pan";
+      }
+
+      if (g.mode === "pan") {
+        e.preventDefault();
+        stage.scrollLeft = g.scrollX - dx;
+        stage.scrollTop = g.scrollY - dy;
+        placeActions();
+        return;
+      }
+
+      if (g.mode === "drag") {
+        e.preventDefault();
+        var nx = g.x0 + dx / zoom, ny = g.y0 + dy / zoom;
+        if (!e.altKey) { nx = Math.round(nx / GRID) * GRID; ny = Math.round(ny / GRID) * GRID; }
+        g.item.x = Math.round(nx); g.item.y = Math.round(ny);
+        var n = page.querySelector('.item[data-id="' + g.item.id + '"]');
+        if (n) { n.style.left = g.item.x + "px"; n.style.top = g.item.y + "px"; }
+        placeActions();
+      }
+    }, { passive: false });
+
+    /* Track every touch on the stage so a second finger can take over. */
     stage.addEventListener("pointerdown", function (e) {
-      if (e.target === stage || e.target === scroller || e.target === pagewrap) select(null);
+      if (e.pointerType !== "touch") {
+        if (e.target === stage || e.target === scroller || e.target === pagewrap) select(null);
+        return;
+      }
+      touches[e.pointerId] = { x: e.clientX, y: e.clientY };
+      var ids = Object.keys(touches);
+      if (ids.length === 2) {
+        rewind();                       // a pinch outranks whatever one finger began
+        var a = touches[ids[0]], b = touches[ids[1]];
+        pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y), z0: zoom };
+      }
+    });
+
+    ["pointerup", "pointercancel"].forEach(function (ev) {
+      window.addEventListener(ev, function (e) {
+        delete touches[e.pointerId];
+        if (Object.keys(touches).length < 2) pinch = null;
+
+        if (!g || e.pointerId !== g.id) return;
+        if (g.mode === "pending") {
+          // never moved far enough to mean anything else: it was a tap
+          var quick = Date.now() - (g.t0 || 0) >= 0;
+          if (quick) select(g.item.id);
+        }
+        endGesture();
+      });
     });
 
     stage.addEventListener("wheel", function (e) {
@@ -1270,39 +1412,6 @@
       e.preventDefault();
       setZoom(zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1), true);
     }, { passive: false });
-
-    /* Pinch to zoom. Ctrl+wheel is the desktop gesture and there is no touch
-       equivalent, so without this a phone is stuck at whatever Fit chose. */
-    var pinch = null;
-    var touches = {};
-
-    stage.addEventListener("pointerdown", function (e) {
-      if (e.pointerType !== "touch") return;
-      touches[e.pointerId] = { x: e.clientX, y: e.clientY };
-      var ids = Object.keys(touches);
-      if (ids.length === 2) {
-        var a = touches[ids[0]], b = touches[ids[1]];
-        pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y), z0: zoom };
-      }
-    });
-
-    stage.addEventListener("pointermove", function (e) {
-      if (e.pointerType !== "touch" || !touches[e.pointerId]) return;
-      touches[e.pointerId] = { x: e.clientX, y: e.clientY };
-      var ids = Object.keys(touches);
-      if (!pinch || ids.length !== 2) return;
-      e.preventDefault();
-      var a = touches[ids[0]], b = touches[ids[1]];
-      var d = Math.hypot(a.x - b.x, a.y - b.y);
-      if (pinch.d0 > 10) setZoom(pinch.z0 * (d / pinch.d0), true);
-    }, { passive: false });
-
-    ["pointerup", "pointercancel", "pointerleave"].forEach(function (ev) {
-      stage.addEventListener(ev, function (e) {
-        delete touches[e.pointerId];
-        if (Object.keys(touches).length < 2) pinch = null;
-      });
-    });
   }
 
   function select(id) {
@@ -1419,7 +1528,9 @@
   /* ============================ selection actions ============================ */
 
   function placeActions() {
-    var it = view === "board" && sel != null ? itemById(sel) : null;
+    // the raised photo tray owns the bottom of the screen; the floating bar waits
+    var blocked = isNarrow() && !trayCollapsed;
+    var it = view === "board" && !blocked && sel != null ? itemById(sel) : null;
     if (!it) { actions.hidden = true; return; }
 
     actions.hidden = false;

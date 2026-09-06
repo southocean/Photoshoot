@@ -509,6 +509,23 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   width: 1.5px; height: 18px; background: var(--moss); transform: translateX(-50%);
 }
 
+/* Fingers, not cursors: Apple asks for 44pt of tappable area, Material for 48dp.
+   The dot stays small so it doesn't cover the photo — the hit area grows around
+   it invisibly, which is the standard way to satisfy both. */
+@media (pointer: coarse) {
+  .handle { width: 20px; height: 20px; border-width: 2px; }
+  .handle.nw { left: -10px; top: -10px; }
+  .handle.ne { right: -10px; top: -10px; }
+  .handle.sw { left: -10px; bottom: -10px; }
+  .handle.se { right: -10px; bottom: -10px; }
+  .handle.rot { top: -42px; margin-left: -10px; }
+  .handle.rot::before { top: 18px; height: 24px; width: 2px; }
+  .handle::after {
+    content: ""; position: absolute; inset: -13px;   /* 46px total target */
+  }
+  .item.sel::after { border-width: 2px; }
+}
+
 /* floating action bar for the selected item */
 #actions {
   position: fixed; z-index: 40;

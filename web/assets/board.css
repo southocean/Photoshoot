@@ -670,6 +670,13 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   #zlabel { display: none; }              /* the number earns no space here */
   #more { margin-left: auto; flex: none; font-size: 15px; padding: 5px 11px; line-height: 1; }
 
+  /* The symbol buttons dock to the right edge as one cluster: the tabs read
+     from the left, the tools sit under your thumb on the right. Whichever of
+     the two is first takes the free space, never both — two auto margins would
+     split it and open a gap in the middle of the cluster. */
+  .zoom { margin-left: auto; }
+  #board-tools:not([hidden]) + #more { margin-left: 0; }
+
   /* One column: the tray is out of flow, so a two-column grid left an `auto`
      track sizing itself from the scaled board — which fed back into the fit. */
   #body { grid-template-columns: 1fr; }

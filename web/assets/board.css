@@ -90,41 +90,79 @@ body {
 
 /* ---- research nav: business ideas swap for the report's sections on scroll ---- */
 
+/* ---- research bar: which report, and how far through it you are ---- */
+
+/* Row 2, the slot the board tabs use — only one of the two is ever visible. */
 #researchbar {
   grid-row: 2;
-  padding: 0 14px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 7px 14px;
   background: var(--bark);
   border-bottom: 1px solid var(--lichen);
+  overflow: hidden;
 }
 
-#research-nav { flex: 1 1 auto; min-width: 0; }
-.navswap { position: relative; height: 32px; }
-.navlayer {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; gap: 6px;
-  overflow-x: auto; overflow-y: hidden;
-  scrollbar-width: none;
-  transition: opacity .22s ease, transform .22s ease;
-}
-.navlayer::-webkit-scrollbar { display: none; }
-.navlayer.hide { opacity: 0; transform: translateY(-7px); pointer-events: none; }
+#ideabar { display: flex; align-items: center; gap: 6px; flex: none; }
 
 .idea {
   font-family: var(--display); font-size: 15px;
-  padding: 5px 14px; border-radius: 999px;
+  padding: 4px 14px; border-radius: 999px; flex: none;
   background: none; border-color: var(--lichen); color: var(--ash);
+  transition: max-width .3s ease, opacity .2s ease, padding .3s ease,
+              border-width .3s ease, color .13s, background .13s;
+  max-width: 240px; overflow: hidden; white-space: nowrap;
 }
 .idea:hover:not(.on) { color: var(--birch); background: var(--humus-hi); border-color: var(--lichen); }
 .idea.on { background: var(--birch); border-color: var(--birch); color: #14170f; font-weight: 500; }
 
-.toclink {
-  font-family: var(--mono); font-size: 11px; letter-spacing: .03em;
-  padding: 4px 10px; border-radius: 999px; flex: none;
-  background: none; border-color: transparent; color: #6d745f;
+/* Once you are reading, the report you are not reading gives up its width to
+   the progress rail. The one you are reading stays as the heading of the bar. */
+#researchbar.deep .idea:not(.on) {
+  max-width: 0; opacity: 0;
+  padding-left: 0; padding-right: 0; border-width: 0;
 }
-.toclink:hover { color: var(--birch); background: var(--humus-hi); border-color: transparent; }
-.toclink.on { color: var(--moss); background: var(--humus-hi); border-color: transparent; font-weight: 500; }
-.toclink b { font-weight: 500; opacity: .55; margin-right: 6px; }
+
+/* The rail: one node per section, numbers only — the names would not survive
+   the width on a phone, and the tooltip carries them for anyone who wants one. */
+#progress {
+  display: flex; align-items: center; gap: 15px;
+  flex: 1 1 auto; min-width: 0;
+  overflow-x: auto; scrollbar-width: none;
+  padding: 3px 1px;
+  max-width: 0; opacity: 0;
+  transition: max-width .32s ease, opacity .24s ease;
+}
+#progress::-webkit-scrollbar { display: none; }
+#researchbar.deep #progress { max-width: 100%; opacity: 1; }
+
+.pnode {
+  position: relative; flex: none;
+  width: 21px; height: 21px; padding: 0;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--bark); border: 1px solid var(--lichen);
+  font-family: var(--mono); font-size: 9.5px; line-height: 1; color: #6d745f;
+  transition: background .2s, border-color .2s, color .2s, transform .2s;
+}
+/* the connector belongs to the gap before its node, so it lights up when that
+   node is reached — no separate track element to keep in sync while scrolling */
+.pnode::before {
+  content: ""; position: absolute; right: 100%; top: 50%;
+  width: 15px; height: 1px; background: var(--lichen);
+  transition: background .2s;
+}
+.pnode:first-child::before { display: none; }
+.pnode.past { border-color: var(--moss); color: var(--moss); }
+.pnode.past::before, .pnode.now::before { background: var(--moss); }
+.pnode.now {
+  background: var(--moss); border-color: var(--moss);
+  color: #14170f; font-weight: 500; transform: scale(1.12);
+}
+.pnode:hover:not(.now) { border-color: var(--moss); color: var(--birch); }
+/* a 21px dot is well under the 44pt touch target, so grow the hit area only */
+@media (pointer: coarse) {
+  .pnode::after { content: ""; position: absolute; inset: -12px; }
+}
 
 #totop {
   position: fixed; right: 22px; bottom: 22px; z-index: 45;
@@ -683,6 +721,11 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   /* One column: the tray is out of flow, so a two-column grid left an `auto`
      track sizing itself from the scaled board — which fed back into the fit. */
   #body { grid-template-columns: 1fr; }
+
+  /* every pixel the rail gains is one more section you can see at a time */
+  #researchbar { padding: 6px 10px; gap: 8px; }
+  #progress { gap: 11px; }
+  .pnode::before { width: 11px; }
 
   #pagebar-wrap { padding: 6px 10px; gap: 6px; overflow: hidden; }
   #pagebar-wrap .pb-label { display: none; }

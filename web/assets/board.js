@@ -740,7 +740,7 @@
     document.getElementById("body").hidden = research;
     document.getElementById("research").hidden = !research;
     document.getElementById("pagebar-wrap").hidden = research;
-    document.getElementById("research-nav").hidden = !research;
+    document.getElementById("researchbar").hidden = !research;
     document.getElementById("board-tools").hidden = research;
     document.getElementById("totop").hidden = !research;
 
@@ -835,7 +835,7 @@
 
     labelSections();
     buildIdeaBar();
-    buildToc();
+    buildProgress();
     host.scrollTop = 0;
     onResearchScroll();
     if (doc) save();
@@ -869,17 +869,19 @@
     });
   }
 
-  function buildToc() {
-    var bar = document.getElementById("tocbar");
+  /* Numbers, not names. The bar has room for one report title and a rail; the
+     section names never survived that width, so they live in the tooltip. */
+  function buildProgress() {
+    var bar = document.getElementById("progress");
     bar.innerHTML = "";
-    sectionsOf(report).forEach(function (h) {
-      var num = h.querySelector(".num");
+    sectionsOf(report).forEach(function (h, i) {
+      var name = h.dataset.toc || h.textContent.replace(/^d+/, "").trim();
       var b = document.createElement("button");
-      b.className = "toclink";
+      b.className = "pnode";
       b.dataset.target = h.id;
-      // data-toc carries a one-word label; the heading itself stays long-form
-      b.innerHTML = (num ? "<b>" + num.textContent + "</b>" : "") +
-        esc(h.dataset.toc || h.textContent.replace(/^\d+/, "").trim());
+      b.textContent = String(i + 1);
+      b.title = name;
+      b.setAttribute("aria-label", name);
       b.onclick = function () { scrollToSection(h); };
       bar.appendChild(b);
     });
@@ -894,28 +896,29 @@
   function onResearchScroll() {
     var host = document.getElementById("research");
     var y = host.scrollTop;
-    var deep = y > SWAP_AT;
 
-    document.getElementById("ideabar").classList.toggle("hide", deep);
-    document.getElementById("tocbar").classList.toggle("hide", !deep);
+    document.getElementById("researchbar").classList.toggle("deep", y > SWAP_AT);
     document.getElementById("totop").classList.toggle("away", y < 260);
 
-    // highlight the section whose heading last passed the top of the viewport
-    var current = null;
-    sectionsOf(report).forEach(function (h) {
-      if (h.offsetTop - 80 <= y) current = h.id;
+    // the section whose heading last passed the top of the viewport is "now";
+    // everything above it is read, so the rail fills behind the moving dot
+    var secs = sectionsOf(report), at = -1;
+    secs.forEach(function (h, i) { if (h.offsetTop - 80 <= y) at = i; });
+
+    var nodes = document.querySelectorAll("#progress .pnode");
+    nodes.forEach(function (b, i) {
+      b.classList.toggle("now", i === at);
+      b.classList.toggle("past", i < at);
+      b.setAttribute("aria-current", i === at ? "true" : "false");
     });
-    document.querySelectorAll("#tocbar .toclink").forEach(function (b) {
-      b.classList.toggle("on", b.dataset.target === current);
-    });
-    if (deep && current) {
-      var on = document.querySelector('#tocbar .toclink[data-target="' + current + '"]');
-      if (on) {
-        var bar = document.getElementById("tocbar");
-        var r = on.getBoundingClientRect(), br = bar.getBoundingClientRect();
-        if (r.left < br.left + 8 || r.right > br.right - 8) {
-          bar.scrollTo({ left: on.offsetLeft - br.width / 2 + r.width / 2, behavior: "smooth" });
-        }
+
+    // keep the moving dot in view — on a phone the rail is wider than the bar
+    var on = nodes[at];
+    if (on && y > SWAP_AT) {
+      var bar = document.getElementById("progress");
+      var r = on.getBoundingClientRect(), br = bar.getBoundingClientRect();
+      if (r.left < br.left + 10 || r.right > br.right - 10) {
+        bar.scrollTo({ left: on.offsetLeft - br.width / 2 + r.width / 2, behavior: "smooth" });
       }
     }
   }

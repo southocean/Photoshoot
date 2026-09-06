@@ -1083,6 +1083,13 @@
     };
 
     window.addEventListener("resize", applyResponsive);
+    /* The stage changes size with the window, and every crop coordinate is in
+       stage pixels — so an open cropper has to be re-laid out, not left behind. */
+    window.addEventListener("resize", function () {
+      if (crop && !document.getElementById("cropper").hidden) {
+        layoutCrop(crop.item, cropPercent());
+      }
+    });
     applyResponsive();
   }
 
@@ -1801,7 +1808,8 @@
     var stageEl = document.getElementById("crop-stage");
     var img = document.getElementById("crop-img");
     var box = stageEl.getBoundingClientRect();
-    var pad = 56;
+    // 56px of breathing room either side is most of a phone screen
+    var pad = isNarrow() ? 14 : 56;
 
     var nw = img.naturalWidth, nh = img.naturalHeight;
     var k = Math.min((box.width - pad * 2) / nw, (box.height - pad * 2) / nh);
@@ -1820,6 +1828,18 @@
       ratio: 0
     };
     paintCrop();
+  }
+
+  /* The live rectangle as percentages of the source image — the form the board
+     stores, and the form layoutCrop takes back when the stage changes size. */
+  function cropPercent() {
+    var d = crop.disp, R = crop.rect;
+    return [
+      Math.max(0, (R.x - d.x) / d.w * 100),
+      Math.max(0, (R.y - d.y) / d.h * 100),
+      Math.min(100, R.w / d.w * 100),
+      Math.min(100, R.h / d.h * 100)
+    ];
   }
 
   function paintCrop() {
@@ -1921,14 +1941,9 @@
 
     document.getElementById("crop-apply").onclick = function () {
       if (!crop) return;
-      var d = crop.disp, R = crop.rect, it = crop.item;
+      var it = crop.item;
       snapshot();
-      it.crop = [
-        Math.max(0, (R.x - d.x) / d.w * 100),
-        Math.max(0, (R.y - d.y) / d.h * 100),
-        Math.min(100, R.w / d.w * 100),
-        Math.min(100, R.h / d.h * 100)
-      ];
+      it.crop = cropPercent();
       it.h = Math.round(it.w * aspectOf(it.img, it.crop));   // keep width, follow the new shape
       closeCrop();
       growPage(); render(); save();

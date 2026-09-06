@@ -319,6 +319,8 @@
     return null;
   }
 
+  var STICKER_BAND = 10000;
+
   function topZ() {
     return board.items.reduce(function (m, i) { return Math.max(m, i.z || 0); }, 0);
   }
@@ -476,7 +478,10 @@
     el.style.top = it.y + "px";
     el.style.width = it.w + "px";
     el.style.height = it.h + "px";
-    el.style.zIndex = it.z;
+    /* Stickers live in a band above everything else. They are the leaves and the
+       pumpkin scattered over the arrangement — a photo that lands on top of one
+       reads as a mistake, and raising a photo must not be able to cause it. */
+    el.style.zIndex = it.z + (it.kind === "sticker" ? STICKER_BAND : 0);
     var tf = (it.rot ? "rotate(" + it.rot + "deg) " : "") +
              (it.flipX ? "scaleX(-1) " : "") + (it.flipY ? "scaleY(-1)" : "");
     if (tf.trim()) el.style.transform = tf.trim();
@@ -1128,6 +1133,7 @@
       e.preventDefault();
       var x0 = e.clientX, w0 = trayW;
       grip.classList.add("dragging");
+      tray.classList.add("nosnap");   // the width follows the pointer, not a curve
       // capture is a nicety, not a requirement — never let it abort the drag
       try { grip.setPointerCapture(e.pointerId); } catch (err) {}
 
@@ -1137,6 +1143,7 @@
       }
       function up() {
         grip.classList.remove("dragging");
+        tray.classList.remove("nosnap");
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", up);
         refit(); save();
@@ -1163,7 +1170,20 @@
     var toggleTray = function () {
       setTrayCollapsed(!trayIsCollapsed());
       applyTray(); refit(); save();
+      followTray();
     };
+
+    /* The column animates its width and every fit is computed from the stage's
+       width, so the board has to be re-fitted while the column moves — otherwise
+       it holds the old scale for the whole slide and snaps at the end. */
+    function followTray() {
+      if (isNarrow()) return;
+      var until = performance.now() + 340;
+      requestAnimationFrame(function step(t) {
+        refit();
+        if (t < until) requestAnimationFrame(step);
+      });
+    }
     document.getElementById("toggle-tray").onclick = toggleTray;
     document.getElementById("tray-handle").onclick = toggleTray;
     document.getElementById("tray-min").onclick = toggleTray;
@@ -1554,15 +1574,9 @@
     }, { passive: false });
   }
 
-  /* Selecting raises. With no front/back buttons the stacking has to follow
-     what you are working on, and on a phone a photo you cannot see is a photo
-     you cannot edit. Deliberately not snapshotted: raising is a side effect of
-     looking at something, and an undo stack full of those buries the real edits. */
   function select(id) {
     if (sel === id) return;
     sel = id;
-    var it = id == null ? null : itemById(id);
-    if (it && it.z !== topZ()) { it.z = topZ() + 1; save(); }
     render();
   }
 
@@ -1591,6 +1605,11 @@
         began = true;
         snapshot();
         delete it.fx; delete it.fy; delete it.anchor;   // moved by hand, so stop auto-placing it
+        /* Raise on move, not on select. Moving a photo is when you need it on
+           top of what it is landing next to; selecting one to crop it is not,
+           and raising on every tap reshuffled the board for nothing. */
+        if (it.z !== topZ()) it.z = topZ() + 1;
+        if (node) node.style.zIndex = it.z + (it.kind === "sticker" ? STICKER_BAND : 0);
       }
       var nx = x0 + (p.x - p0.x), ny = y0 + (p.y - p0.y);
       if (!e2.altKey) { nx = Math.round(nx / GRID) * GRID; ny = Math.round(ny / GRID) * GRID; }

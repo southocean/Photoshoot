@@ -407,6 +407,9 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 
 #tray {
   position: relative;
+  /* the column slides open and shut; dragging the grip sets .nosnap so the
+     width follows the pointer instead of chasing it a quarter-second behind */
+  transition: width .26s cubic-bezier(.22, .61, .36, 1);
   width: 218px;
   border-right: 1px solid var(--lichen);
   background: var(--humus);
@@ -416,6 +419,8 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 /* Collapsed on a desktop the column keeps a narrow rail, because a control that
    vanishes leaves you hunting the toolbar for the way back. */
 #tray.collapsed { border-right: none; overflow: visible; }
+#tray.nosnap { transition: none; }
+@media (prefers-reduced-motion: reduce) { #tray { transition: none; } }
 /* the sheet handle belongs to the phone layout only */
 #tray-handle { display: none; }
 

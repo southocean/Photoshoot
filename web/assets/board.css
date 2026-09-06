@@ -427,7 +427,7 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 /* the rail: only there once the gallery is minimised */
 #tray-open {
   position: absolute; left: 0; top: 10px; z-index: 6;
-  display: none; align-items: center; justify-content: center;
+  display: inline-flex; align-items: center; justify-content: center;
   padding: 8px 9px;
   border-radius: 0 8px 8px 0; border-left: none;
   background: var(--humus); border-color: var(--lichen);
@@ -435,7 +435,23 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 }
 #tray-open .ico svg { width: 17px; height: 17px; }
 #tray-open:hover { border-color: var(--moss); color: var(--moss); }
-#tray.collapsed #tray-open { display: inline-flex; }
+
+/* It slides out of the edge the gallery just left, rather than blinking into
+   place. visibility is delayed off the end of the slide so a hidden button
+   cannot be tabbed to or clicked. */
+#tray-open {
+  opacity: 0; visibility: hidden; transform: translateX(-112%);
+  transition: opacity .2s ease, transform .26s cubic-bezier(.22, .61, .36, 1),
+              visibility 0s .26s, border-color .13s, color .13s;
+}
+#tray.collapsed #tray-open {
+  opacity: 1; visibility: visible; transform: none;
+  transition: opacity .2s ease .05s, transform .26s cubic-bezier(.22, .61, .36, 1) .05s,
+              visibility 0s, border-color .13s, color .13s;
+}
+@media (prefers-reduced-motion: reduce) {
+  #tray-open, #tray.collapsed #tray-open { transition: none; }
+}
 
 #tray-grip {
   position: absolute; top: 0; right: -3px; bottom: 0;
@@ -968,13 +984,19 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
     max-width: 120px; overflow: hidden; white-space: nowrap;
     transition: max-width .28s ease, opacity .2s ease, margin-right .28s ease;
   }
-  #history {
-    max-width: 0; opacity: 0; overflow: hidden;
-    transition: max-width .28s ease, opacity .2s ease;
-  }
   #bar.showhistory .brand { max-width: 0; opacity: 0; margin-right: 0; }
-  #bar.showhistory #history { max-width: 78px; opacity: 1; }
 }
+
+/* Two dead buttons are worse than no buttons on any screen, so the pair only
+   exists once there is something to undo. Only the name-for-history swap is a
+   narrow-screen affair — a wide bar has room for both. */
+#history {
+  max-width: 0; opacity: 0; overflow: hidden;
+  transition: max-width .28s ease, opacity .2s ease;
+}
+#bar.showhistory #history { max-width: 100px; opacity: 1; }
+/* …and its trailing rule would otherwise double up with the one before it */
+#bar:not(.showhistory) #history + .sep { display: none; }
 
 /* ================= icon buttons ================= */
 

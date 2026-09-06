@@ -62,14 +62,26 @@ body {
   font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
   text-transform: uppercase; color: #5f6653;
 }
+/* Board tabs behave like browser tabs: the title truncates rather than pushing
+   the rest of the bar off-screen, and each carries its own close button. */
 .tab {
-  font-size: 12.5px; padding: 5px 12px;
+  font-size: 12.5px; padding: 5px 6px 5px 12px;
   background: none; border-color: var(--lichen);
+  max-width: min(200px, 46vw); flex: 0 0 auto; min-width: 0;
 }
+.tab .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .tab.on {
   background: var(--moss); border-color: var(--moss);
   color: #14170f; font-weight: 600;
 }
+.tab .x {
+  flex: none; width: 17px; height: 17px; padding: 0;
+  display: grid; place-items: center;
+  border-radius: 50%; border: none; background: none;
+  font-size: 13px; line-height: 1; color: inherit; opacity: .5;
+}
+.tab .x:hover { opacity: 1; background: rgba(196, 87, 75, .9); color: #fff; }
+.tab.only .x { display: none; }
 #sizes { display: flex; gap: 3px; }
 #sizes button { padding: 4px 9px; font-size: 11.5px; font-family: var(--mono); }
 
@@ -614,29 +626,43 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 @media (max-width: 820px) {
   #bar { gap: 5px; padding: 7px 10px; flex-wrap: nowrap; overflow: hidden; }
   #bar .sep, #bar .grow { display: none; }
-  .brand { font-size: 15px; margin-right: 2px; }
+  .brand { font-size: 15px; margin-right: 2px; flex: none; }
+  .views { min-width: 0; }
   .vtab { padding: 5px 9px; font-size: 12px; }
-  #more { margin-left: auto; font-size: 15px; padding: 5px 11px; line-height: 1; }
-  .zoom span { min-width: 38px; font-size: 11px; }
+  #zlabel { display: none; }              /* the number earns no space here */
+  #more { margin-left: auto; flex: none; font-size: 15px; padding: 5px 11px; line-height: 1; }
 
-  #pagebar-wrap { padding: 6px 10px; gap: 6px; }
+  /* One column: the tray is out of flow, so a two-column grid left an `auto`
+     track sizing itself from the scaled board — which fed back into the fit. */
+  #body { grid-template-columns: 1fr; }
+
+  #pagebar-wrap { padding: 6px 10px; gap: 6px; overflow: hidden; }
   #pagebar-wrap .pb-label { display: none; }
-  #pagebar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  #pagebar {
+    flex: 1 1 auto; min-width: 0;
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+  }
   #pagebar::-webkit-scrollbar { display: none; }
+  #pagebar-wrap > button { flex: none; }
 
-  /* Tray floats over the board instead of stealing a column from it, and slides
-     on `transform` rather than `width` — animating width relayouts every frame
-     and, worse, left the box stuck at its start value. */
+  /* Tray becomes a bottom sheet: a phone is tall, not wide, so a horizontal
+     strip of small tiles costs the board far less than a side column. */
   #tray {
-    position: absolute; top: 0; bottom: 0; left: 0; z-index: 40;
-    width: min(78vw, 320px) !important;
-    box-shadow: 0 0 50px rgba(0, 0, 0, .7);
-    transform: translateX(0);
+    position: absolute; left: 0; right: 0; bottom: 0; top: auto; z-index: 40;
+    width: auto !important; height: 252px;
+    flex-direction: column;
+    border-right: none; border-top: 1px solid var(--lichen);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, .6);
+    transform: translateY(0);
     transition: transform .2s ease;
   }
-  #tray.collapsed { transform: translateX(-101%); box-shadow: none; }
-  #tray-grip { display: none; }
-  .tray-list { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+  #tray.collapsed { transform: translateY(101%); box-shadow: none; }
+  #tray-grip, .tray-head, .tray-foot .hint { display: none; }
+  .tray-list { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 6px; padding: 8px; }
+  .tray-foot { padding: 8px; grid-auto-flow: column; align-items: center; gap: 10px; }
+  .tray-foot .filebtn { padding: 6px 12px; }
+  .tile.used::after { font-size: 8px; }
+  .tile .n { font-size: 8px; padding: 0 3px; }
 
   #scroller { padding: 12px; }
   #research { padding: 0 16px 90px; }

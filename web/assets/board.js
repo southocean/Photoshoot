@@ -222,12 +222,15 @@
     render(); save();
   }
 
-  function deleteBoard() {
+  /* Closes any board, not just the active one — the tabs each carry their own ×. */
+  function deleteBoard(i) {
+    if (i == null) i = doc.active;
     if (doc.boards.length < 2) { toast("This is the only board — reset it instead of deleting it."); return; }
-    if (!confirm("Delete the board “" + board.name + "”? Everything on it goes with it.")) return;
+    if (!confirm("Delete the board “" + doc.boards[i].name + "”? Everything on it goes with it.")) return;
     snapshot();
-    doc.boards.splice(doc.active, 1);
-    doc.active = Math.max(0, doc.active - 1);
+    doc.boards.splice(i, 1);
+    if (doc.active >= doc.boards.length) doc.active = doc.boards.length - 1;
+    else if (i < doc.active) doc.active -= 1;
     board = doc.boards[doc.active];
     sel = null;
     render(); refit(); save();
@@ -235,18 +238,33 @@
 
   function renderPages() {
     pagebar.innerHTML = "";
+    var only = doc.boards.length < 2;
     doc.boards.forEach(function (b, i) {
       var t = document.createElement("button");
-      t.className = "tab" + (i === doc.active ? " on" : "");
-      t.textContent = b.name;
-      t.title = b.items.filter(function (x) { return x.kind === "photo"; }).length + " photos";
+      t.className = "tab" + (i === doc.active ? " on" : "") + (only ? " only" : "");
+      t.title = b.name + " — " +
+        b.items.filter(function (x) { return x.kind === "photo"; }).length + " photos";
+
+      var name = document.createElement("span");
+      name.className = "name";
+      name.textContent = b.name;
+      t.appendChild(name);
+
+      var x = document.createElement("span");
+      x.className = "x";
+      x.setAttribute("role", "button");
+      x.setAttribute("aria-label", "Delete " + b.name);
+      x.title = "Delete this board";
+      x.textContent = "×";
+      x.onclick = function (e) { e.stopPropagation(); deleteBoard(i); };
+      t.appendChild(x);
+
       t.onclick = function () { i === doc.active ? renameBoard() : setActive(i); };
       pagebar.appendChild(t);
     });
 
     pagebar.appendChild(mk("+ Board", addBoard.bind(null, null), "Start an empty board for another look"));
     pagebar.appendChild(mk("Duplicate", function () { addBoard(board); }, "Copy this board as a starting point"));
-    pagebar.appendChild(mk("Delete", deleteBoard, "Delete this board", "danger"));
 
     function mk(label, fn, title, cls) {
       var b = document.createElement("button");

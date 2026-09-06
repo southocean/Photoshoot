@@ -723,7 +723,7 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   #crop-reset  { order: 2; flex: none; }
   #crop-cancel { order: 3; flex: none; }
   #crop-apply  { order: 4; flex: none; }
-  .crop-head > button { padding: 7px 12px; }
+  .crop-head > button { padding: 9px 11px; }
 
   /* one row, every ratio the same width — no scrolling past the ones you want */
   #crop-aspects {
@@ -907,7 +907,7 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 
 /* Fit, Download, Reset, +, Duplicate read as symbols; the visible name is
    carried by the tooltip, the accessible one by aria-label. */
-#bar .lbl, #pagebar .lbl {
+#bar .lbl, #pagebar .lbl, .crop-head .lbl {
   position: absolute; width: 1px; height: 1px;
   margin: -1px; padding: 0; border: 0;
   clip: rect(0 0 0 0); clip-path: inset(50%); overflow: hidden; white-space: nowrap;

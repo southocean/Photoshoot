@@ -666,8 +666,10 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   border-bottom: 1px solid var(--lichen);
   background: var(--humus);
 }
+/* Sans, like every other name of a thing in this app — the mono face is for
+   labels, numbers and code, and a title set in it read as a fourth typeface. */
 #crop-title {
-  font-family: var(--mono); font-size: 12px; color: var(--ash);
+  font-family: var(--sans); font-size: 13px; color: var(--birch);
   min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 #crop-aspects { display: flex; gap: 3px; }
@@ -708,21 +710,29 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 }
 
 @media (max-width: 820px) {
-  /* Two rows rather than one that cannot fit: the title and the three actions
-     you need, then the ratios on their own scrolling line. */
-  .crop-head { flex-wrap: wrap; gap: 6px; padding: 8px 10px; }
+  /* Two rows: the title with its three actions, then the ratios.
+
+     The title takes flex-basis 0 rather than auto because a wrapping flex
+     container breaks lines on hypothetical sizes, before any shrinking — so a
+     long name claimed the whole first line and pushed Apply onto its own row
+     and the ratios onto a third. At basis 0 it asks for nothing, the actions
+     keep their line, and the title grows into whatever is left. */
+  .crop-head { flex-wrap: wrap; gap: 6px; padding: 9px 10px; align-items: center; }
   .crop-head .pb-label, .crop-head .grow, .crop-head .sep { display: none; }
-  #crop-title { order: 1; flex: 1 1 auto; }
+  #crop-title { order: 1; flex: 1 1 0; }
   #crop-reset  { order: 2; flex: none; }
   #crop-cancel { order: 3; flex: none; }
   #crop-apply  { order: 4; flex: none; }
+  .crop-head > button { padding: 7px 12px; }
+
+  /* one row, every ratio the same width — no scrolling past the ones you want */
   #crop-aspects {
     order: 5; flex: 1 0 100%; min-width: 0;
-    overflow-x: auto; scrollbar-width: none;
+    display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px;
   }
-  #crop-aspects::-webkit-scrollbar { display: none; }
-  #crop-aspects button { flex: none; padding: 6px 11px; }
-  .crop-head > button { padding: 6px 11px; }
+  #crop-aspects button {
+    width: 100%; padding: 7px 2px; justify-content: center; font-size: 11px;
+  }
 }
 
 #toast {

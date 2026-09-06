@@ -285,9 +285,8 @@
   /* On a narrow bar the name holds the space until there is history worth
      showing, then hands it over. Two dead buttons are worse than a wordmark. */
   function syncIdSlot() {
-    var slot = document.getElementById("idslot");
-    if (!slot) return;
-    slot.classList.toggle("showhistory", !!(undoStack.length || redoStack.length));
+    document.getElementById("bar")
+      .classList.toggle("showhistory", !!(undoStack.length || redoStack.length));
   }
 
   function itemById(id) {
@@ -751,7 +750,7 @@
       // Drop the selection outright. Hiding the bar isn't enough: any later
       // placeActions() — a scroll, a resize — would put it back over the report.
       if (sel != null) { sel = null; if (board) render(); }
-      actions.hidden = true;
+      actions.classList.add("away");
       setReport(report);
     } else if (board) {
       refit();
@@ -969,12 +968,12 @@
     document.getElementById("view-board-tab").textContent = n ? "Board" : "Mood board";
     document.getElementById("view-research-tab").textContent = n ? "Research" : "Market research";
 
-    var slot = document.getElementById("idslot");
     var hist = document.getElementById("history");
 
     if (n) {
       homes.forEach(function (h) { menu.appendChild(h.el); });
-      slot.appendChild(hist);              // share the brand's space
+      var views = document.querySelector(".views");
+      views.parentNode.insertBefore(hist, views.nextSibling);   // squeeze in beside the tabs
     } else {
       homes.forEach(function (h) { h.parent.insertBefore(h.el, h.next); });
       if (histHome) histHome.parent.insertBefore(hist, histHome.next);
@@ -1272,6 +1271,31 @@
        and rewinds the item it had begun to move. */
 
   var SLOP = 8, HOLD = 500;
+  var gestureBusy = false;
+
+  /* While a finger is moving something, the floating bar is in the way and
+     stale — it belongs to a position that is changing. Park it until the
+     gesture ends. */
+  function setGestureBusy(on) {
+    if (gestureBusy === on) return;
+    gestureBusy = on;
+    if (on) actions.classList.add("away");
+    else placeActions();
+  }
+
+  /* Once something is selected, a photo's tappable area shrinks to its middle.
+     Tapping a photo's edge then means "I'm done with this selection" rather
+     than "select that one instead" — which is the only intuitive way to
+     dismiss a selection on a touchscreen, where there is often no empty canvas
+     within reach. With nothing selected, the whole photo is tappable. */
+  function inCore(item, x, y) {
+    var node = page.querySelector('.item[data-id="' + item.id + '"]');
+    if (!node) return true;
+    var r = node.getBoundingClientRect();
+    var inset = Math.max(10, Math.min(r.width, r.height) * 0.25);
+    return x > r.left + inset && x < r.right - inset &&
+           y > r.top + inset && y < r.bottom - inset;
+  }
 
   function wireStage() {
     var touches = {};        // live touch points, by pointerId
@@ -1297,6 +1321,7 @@
         // nothing to undo; panning leaves no state
       }
       g = null;
+      setGestureBusy(false);
       render();
     }
 
@@ -1319,8 +1344,19 @@
         return;
       }
 
-      if (!node) { if (e.pointerType !== "touch") select(null); return; }
       if (e.target.getAttribute("contenteditable") === "true") return;
+
+      // a tap on bare board is a deselect, but only once the finger lifts
+      if (!node) {
+        if (e.pointerType !== "touch") { select(null); return; }
+        if (!g && Object.keys(touches).length < 2) {
+          g = { id: e.pointerId, item: null, mode: "pending",
+                sx: e.clientX, sy: e.clientY,
+                scrollX: stage.scrollLeft, scrollY: stage.scrollTop };
+        }
+        return;
+      }
+
       var item = itemById(+node.dataset.id);
 
       /* A mouse is unambiguous: press means grab. Leave desktop alone. */
@@ -1372,15 +1408,15 @@
         if (Math.hypot(dx, dy) < SLOP) return;
         clearHold();
         // the first real movement decides, and the decision is final
-        if (g.selected) beginDrag();
+        if (g.item && g.selected) beginDrag();
         else g.mode = "pan";
+        setGestureBusy(true);
       }
 
       if (g.mode === "pan") {
         e.preventDefault();
         stage.scrollLeft = g.scrollX - dx;
         stage.scrollTop = g.scrollY - dy;
-        placeActions();
         return;
       }
 
@@ -1416,12 +1452,17 @@
         if (Object.keys(touches).length < 2) pinch = null;
 
         if (!g || e.pointerId !== g.id) return;
+
         if (g.mode === "pending") {
           // never moved far enough to mean anything else: it was a tap
-          var quick = Date.now() - (g.t0 || 0) >= 0;
-          if (quick) select(g.item.id);
+          if (!g.item) select(null);                     // bare board
+          else if (sel == null) select(g.item.id);       // nothing selected yet
+          else if (sel === g.item.id) { /* keep it */ }
+          else if (inCore(g.item, e.clientX, e.clientY)) select(g.item.id);
+          else select(null);                             // edge tap dismisses
         }
         endGesture();
+        setGestureBusy(false);
       });
     });
 
@@ -1549,9 +1590,9 @@
     // the raised photo tray owns the bottom of the screen; the floating bar waits
     var blocked = isNarrow() && !trayCollapsed;
     var it = view === "board" && !blocked && sel != null ? itemById(sel) : null;
-    if (!it) { actions.hidden = true; return; }
+    if (!it) { actions.classList.add("away"); return; }
 
-    actions.hidden = false;
+    if (!gestureBusy) actions.classList.remove("away");
     buildActions(it);
 
     var r = page.getBoundingClientRect();
@@ -1685,7 +1726,7 @@
     document.getElementById("crop-title").textContent = p.title || "";
 
     wrap.hidden = false;
-    actions.hidden = true;
+    actions.classList.add("away");
 
     img.onload = function () { layoutCrop(it, it.crop || [0, 0, 100, 100]); };
     img.src = p.src;

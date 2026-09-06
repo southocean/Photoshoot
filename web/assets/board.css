@@ -420,7 +420,11 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 }
 #stage.panning { cursor: grabbing; }
 
+/* `safe center` centres only while the board fits. Plain `center` overflows
+   equally both ways, and scrollLeft cannot go negative, so the left of a
+   zoomed-in board becomes unreachable. */
 #scroller { padding: 34px; display: flex; justify-content: center; }
+#scroller { justify-content: safe center; }
 
 #page {
   position: relative;
@@ -538,7 +542,10 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   background: var(--humus); border: 1px solid var(--lichen);
   border-radius: 8px; box-shadow: 0 8px 26px rgba(0, 0, 0, .55);
 }
-#actions[hidden] { display: none; }
+/* Fades rather than snaps: it hides while you drag or pan and comes back when
+   you stop, and a control blinking in and out reads as a glitch. */
+#actions { opacity: 1; transition: opacity .18s ease, transform .18s ease; }
+#actions.away { opacity: 0; transform: translateY(6px); pointer-events: none; }
 #actions button { padding: 5px 9px; font-size: 12px; }
 /* the popover for picking a sticker */
 #stickers {
@@ -751,20 +758,18 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   #reset { padding: 5px 10px; font-size: 12px; }
 }
 
+
 @media (max-width: 820px) {
-  /* One slot, two occupants, cross-faded: the name until the first action,
-     then undo/redo. Fixed width so nothing else in the bar shifts. */
-  #idslot {
-    display: block; position: relative;
-    flex: none; width: 68px; height: 28px;
+  /* The name yields its width and the history buttons take it, so the tabs
+     slide left into the gap instead of anything jumping. */
+  .brand {
+    max-width: 120px; overflow: hidden; white-space: nowrap;
+    transition: max-width .28s ease, opacity .2s ease, margin-right .28s ease;
   }
-  #idslot > * {
-    position: absolute; left: 0; top: 50%;
-    transform: translateY(-50%);
-    transition: opacity .26s ease, transform .26s ease;
+  #history {
+    max-width: 0; opacity: 0; overflow: hidden;
+    transition: max-width .28s ease, opacity .2s ease;
   }
-  #idslot .brand { margin: 0; }
-  #idslot #history { opacity: 0; transform: translateY(2px); pointer-events: none; }
-  #idslot.showhistory .brand { opacity: 0; transform: translateY(calc(-50% - 8px)); pointer-events: none; }
-  #idslot.showhistory #history { opacity: 1; transform: translateY(-50%); pointer-events: auto; }
+  #bar.showhistory .brand { max-width: 0; opacity: 0; margin-right: 0; }
+  #bar.showhistory #history { max-width: 78px; opacity: 1; }
 }

@@ -285,10 +285,12 @@
   }
 
   /* On a narrow bar the name holds the space until there is history worth
-     showing, then hands it over. Two dead buttons are worse than a wordmark. */
+     showing, then hands it over. Two dead buttons are worse than a wordmark —
+     and in the research view they undo nothing you can see, so the name keeps
+     the space there however deep the board history is. */
   function syncIdSlot() {
     document.getElementById("bar")
-      .classList.toggle("showhistory", undoStack.length > 0);
+      .classList.toggle("showhistory", view === "board" && undoStack.length > 0);
   }
 
   function itemById(id) {
@@ -757,6 +759,7 @@
     } else if (board) {
       refit();
     }
+    syncIdSlot();
     if (doc) save();
   }
 

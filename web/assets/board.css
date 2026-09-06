@@ -413,9 +413,29 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   display: flex; flex-direction: column;
   min-height: 0;
 }
-#tray.collapsed { border-right: none; overflow: hidden; }
+/* Collapsed on a desktop the column keeps a narrow rail, because a control that
+   vanishes leaves you hunting the toolbar for the way back. */
+#tray.collapsed { border-right: none; overflow: visible; }
 /* the sheet handle belongs to the phone layout only */
 #tray-handle { display: none; }
+
+.tray-title { display: flex; align-items: center; gap: 8px; }
+.tray-title h2 { flex: 1 1 auto; min-width: 0; }
+#tray-min { flex: none; padding: 3px 5px; }
+#tray-min .ico svg { width: 14px; height: 14px; }
+
+/* the rail: only there once the gallery is minimised */
+#tray-open {
+  position: absolute; left: 0; top: 10px; z-index: 6;
+  display: none; align-items: center; gap: 7px;
+  padding: 8px 10px 8px 8px;
+  border-radius: 0 8px 8px 0; border-left: none;
+  background: var(--humus); border-color: var(--lichen);
+  box-shadow: 4px 6px 20px rgba(0, 0, 0, .45);
+  font-size: 12px;
+}
+#tray-open:hover { border-color: var(--moss); color: var(--moss); }
+#tray.collapsed #tray-open { display: inline-flex; }
 
 #tray-grip {
   position: absolute; top: 0; right: -3px; bottom: 0;
@@ -531,11 +551,16 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
 .item .photo.f-black { border: 6px solid #14170f; }
 .item .photo.f-hair { border: 1.5px solid rgba(237, 232, 217, .55); }
 
+/* Visible, not hidden: at 92px the line box is 112px inside a 108px item, so
+   the umlaut on HÖST was being sliced off the top. Clipping a glyph is always
+   the wrong answer — a heading that outgrows its box should show, not lose a
+   diacritic. Editing gets a scroller so a long paragraph stays workable. */
 .item .txt {
   width: 100%; height: 100%;
   white-space: pre-wrap; word-break: break-word;
-  outline: none; overflow: hidden;
+  outline: none; overflow: visible;
 }
+.item .txt[contenteditable="true"] { overflow: auto; }
 .item .txt[contenteditable="true"] { cursor: text; }
 
 .item .swatch { width: 100%; height: 100%; display: flex; flex-direction: column; gap: 7px; }
@@ -902,6 +927,7 @@ button.danger:hover { border-color: var(--rowan); color: var(--rowan); }
   .tray-list { border-top: none; }
 
   #tray-grip, .tray-head, .tray-foot .hint { display: none; }
+  #tray.collapsed #tray-open { display: none; }
   /* keep the last of the board clear of the resting handle */
   #scroller { padding-bottom: 52px; }
   .tray-list { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 6px; padding: 8px; }

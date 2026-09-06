@@ -25,7 +25,7 @@
     <span class="sep"></span>
 
     <span id="board-tools">
-    <button id="toggle-tray" class="on" title="Show or hide the photo gallery">Photos</button>
+    <button id="toggle-tray" class="on" title="Show or hide the photo gallery">Gallery</button>
 
     <span class="sep"></span>
 
@@ -90,7 +90,12 @@
         <span>Photo Gallery</span><i class="chev" aria-hidden="true"></i>
       </button>
       <div class="tray-head">
-        <h2>Photo Gallery</h2>
+        <div class="tray-title">
+          <h2>Photo Gallery</h2>
+          <button id="tray-min" class="ghost" title="Minimise the gallery" aria-label="Minimise the gallery" aria-controls="tray-list">
+            <i class="ico"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9.8 3.4 5.2 8l4.6 4.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
+          </button>
+        </div>
         <p>Click one to drop it on the board.</p>
       </div>
       <div class="tray-list" id="tray-list"></div>
@@ -102,6 +107,10 @@
         </div>
         <p class="hint">Or drag image files anywhere onto the page.</p>
       </div>
+      <button id="tray-open" title="Show the photo gallery" aria-label="Show the photo gallery">
+        <i class="ico"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3.4" width="12" height="9.2" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.4 10.6 5.8 7.6l2.6 2.3 2-1.7 3.2 2.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="6.1" r="1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
+        <span>Gallery</span>
+      </button>
       <div id="tray-grip" role="separator" aria-orientation="vertical" tabindex="0"
            aria-label="Drag to resize the photo gallery" title="Drag to resize · double-click to reset"></div>
     </aside>

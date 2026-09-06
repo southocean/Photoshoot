@@ -16,7 +16,15 @@
   var board = null;      // shorthand for doc.boards[doc.active]
   var zoom = 1, sel = null, uid = 0;
   var TRAY_MIN = 150, TRAY_MAX = 620, TRAY_DEFAULT = 300;
-  var trayW = TRAY_DEFAULT, trayCollapsed = false;
+  /* Two layouts, two states. The desktop column is open by default and
+     remembers what you set it to; the phone sheet covers the board, so it
+     starts closed every visit and is not persisted at all. Sharing one flag
+     meant collapsing the sheet on a phone left the desktop gallery hidden. */
+  var trayW = TRAY_DEFAULT, trayCollapsedWide = false, traySheetOpen = false;
+  function trayIsCollapsed() { return isNarrow() ? !traySheetOpen : trayCollapsedWide; }
+  function setTrayCollapsed(v) {
+    if (isNarrow()) traySheetOpen = !v; else trayCollapsedWide = v;
+  }
   var fitOn = true, savedZoom = 0, sawSavedUi = false;
   var undoStack = [], redoStack = [];
   var downloads = null;
@@ -45,8 +53,6 @@
     wireResponsive();
 
     load();
-    // first visit on a phone: the board matters more than the tray
-    if (!sawSavedUi && window.innerWidth <= NARROW) trayCollapsed = true;
     applyTray();
     setView(view);
     preloadAll().then(function () {
@@ -118,7 +124,7 @@
       localStorage.setItem(KEY, JSON.stringify({
         doc: doc,
         uploads: lib.filter(function (p) { return p.local; }),
-        ui: { trayW: trayW, trayCollapsed: trayCollapsed, view: view, report: report, zoom: zoom, fitOn: fitOn }
+        ui: { trayW: trayW, trayCollapsed: trayCollapsedWide, view: view, report: report, zoom: zoom, fitOn: fitOn }
       }));
     } catch (e) {
       toast("Could not save — browser storage is full. Delete a photo from the tray, or export the board.");
@@ -135,7 +141,7 @@
       var p = JSON.parse(raw);
       if (p.ui) {
         if (p.ui.trayW) trayW = clampTray(p.ui.trayW);
-        trayCollapsed = !!p.ui.trayCollapsed;
+        trayCollapsedWide = !!p.ui.trayCollapsed;
         sawSavedUi = true;
         if (p.ui.view) view = p.ui.view;
         if (p.ui.report) report = p.ui.report;
@@ -631,7 +637,7 @@
 
       b.onclick = function () {
         addPhoto(p.key);
-        if (isNarrow()) { trayCollapsed = true; applyTray(); refit(); save(); }
+        if (isNarrow()) { setTrayCollapsed(true); applyTray(); refit(); save(); }
       };
       wrap.appendChild(b);
 
@@ -1048,7 +1054,7 @@
 
   function syncScrim() {
     var menuOpen = !document.getElementById("moremenu").hidden;
-    var trayOpen = isNarrow() && !trayCollapsed;
+    var trayOpen = isNarrow() && !trayIsCollapsed();
     document.getElementById("scrim").hidden = !(menuOpen || trayOpen);
   }
 
@@ -1077,8 +1083,8 @@
 
     document.getElementById("scrim").onclick = function () {
       closeMenu();
-      if (isNarrow() && !trayCollapsed) {
-        trayCollapsed = true;
+      if (isNarrow() && !trayIsCollapsed()) {
+        setTrayCollapsed(true);
         applyTray(); refit(); save();
       }
     };
@@ -1099,15 +1105,18 @@
   function clampTray(w) { return Math.max(TRAY_MIN, Math.min(TRAY_MAX, Math.round(w))); }
 
   function applyTray() {
-    tray.classList.toggle("collapsed", trayCollapsed);
+    var off = trayIsCollapsed();
+    tray.classList.toggle("collapsed", off);
     /* On a narrow screen the drawer's width is fixed in CSS and the collapse is a
        transform, so an inline width would only fight it. */
     if (isNarrow()) tray.style.removeProperty("width");
-    else tray.style.width = (trayCollapsed ? 0 : trayW) + "px";
+    else tray.style.width = (off ? 0 : trayW) + "px";
     var t = document.getElementById("toggle-tray");
-    if (t) t.classList.toggle("on", !trayCollapsed);
+    if (t) t.classList.toggle("on", !off);
     var h = document.getElementById("tray-handle");
-    if (h) h.setAttribute("aria-expanded", trayCollapsed ? "false" : "true");
+    if (h) h.setAttribute("aria-expanded", off ? "false" : "true");
+    var m = document.getElementById("tray-min");
+    if (m) m.setAttribute("aria-expanded", off ? "false" : "true");
     syncScrim();
     placeActions();
   }
@@ -1152,11 +1161,13 @@
 
   function wireToolbar() {
     var toggleTray = function () {
-      trayCollapsed = !trayCollapsed;
+      setTrayCollapsed(!trayIsCollapsed());
       applyTray(); refit(); save();
     };
     document.getElementById("toggle-tray").onclick = toggleTray;
     document.getElementById("tray-handle").onclick = toggleTray;
+    document.getElementById("tray-min").onclick = toggleTray;
+    document.getElementById("tray-open").onclick = toggleTray;
 
     document.getElementById("add-text").onclick = function () {
       snapshot();
@@ -1673,7 +1684,7 @@
 
   function placeActions() {
     // the raised photo tray owns the bottom of the screen; the floating bar waits
-    var blocked = isNarrow() && !trayCollapsed;
+    var blocked = isNarrow() && !trayIsCollapsed();
     var it = view === "board" && !blocked && sel != null ? itemById(sel) : null;
     if (!it) { actions.classList.add("away"); return; }
 

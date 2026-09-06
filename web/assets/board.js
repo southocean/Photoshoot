@@ -760,6 +760,7 @@
       refit();
     }
     syncIdSlot();
+    syncMore();
     if (doc) save();
   }
 
@@ -991,8 +992,7 @@
     narrow = n;
 
     var menu = document.getElementById("moremenu");
-    var more = document.getElementById("more");
-    more.hidden = !n;
+    syncMore();
 
     // full labels don't fit beside the tools once the bar stops wrapping
     document.getElementById("view-board-tab").textContent = n ? "Board" : "Mood board";
@@ -1012,6 +1012,16 @@
     syncIdSlot();
     applyTray();
     refit();
+  }
+
+  /* Everything in the overflow menu is a board tool — text blocks, palettes,
+     canvas sizes, the board's own export. None of it acts on a report, so the
+     button that opens it has no business in the research view. */
+  function syncMore() {
+    var more = document.getElementById("more");
+    var show = isNarrow() && view === "board";
+    more.hidden = !show;
+    if (!show) closeMenu();
   }
 
   function closeMenu() {

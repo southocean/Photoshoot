@@ -1,5 +1,9 @@
 # Photoshoot
 
+### → **[southocean.github.io/Photoshoot](https://southocean.github.io/Photoshoot/)**
+
+The live mood board and market research. Nothing to install, works on a phone.
+
 Working repo for a fantasy photoshoot + wardrobe/prop rental business in Stockholm.
 Two things live here: the market research behind the idea, and the planning material for the September/October test shoots.
 
@@ -7,24 +11,33 @@ Two things live here: the market research behind the idea, and the planning mate
 
 ## The mood board
 
-Open **[`web/index.html`](web/index.html)** in a browser. It works straight from disk: no server, no build step.
+Open the [live site](https://southocean.github.io/Photoshoot/), or `web/index.html` straight from disk. No server, no build step either way.
 
-- **Click** a card to open it full-screen. **Scroll or double-click** to zoom, **drag** to pan
-- **← / →** move between images, **S** shortlists, **Esc** closes
-- **Drag cards** to rearrange the board
-- **★** to shortlist, then "Shortlist only" to see just the picks
-- Each image carries two notes: **what to steal** from it, and **what to change** for a Swedish audience
-- Type your own notes in the panel: they save in your browser
-- **Drag image files onto the page** to add your own finds
-- **Export / Import** to send your version of the board to someone else
+**Arranging**
+- **Drag** a photo to move it, the **corner dots** to resize, the **side dot** to rotate (hold Shift to snap to 15°)
+- **Crop** without touching the original, free or to a fixed ratio, with its own undo
+- Switch a photo between **rectangle and circle**, and cycle its **frame**: none, white, black, hairline
+- **Undo / redo** everything, or **Reset** to the shipped arrangement, which is undoable too
+
+**Filling it**
+- The **Gallery** holds every reference. Click one to drop it on the board
+- **Upload your own**, or drag image files anywhere onto the page. The meter shows how much room your browser has left
+- Add **text blocks**, **colour palettes** and **stickers**. **Auto-arrange** tidies everything back into a grid
+- Several **boards** in one file, one per look, with canvas presets for tall, 16:9, square and A4
+
+**Getting it out**
+- **Download** the board as a PNG. On a phone that goes through the share sheet, so "Save Image" puts it in your photo library
+- **Export / Import** the whole thing as JSON, to send your version to someone else
+
+**Market research** is the second tab: both reports, with a progress rail that follows the section you are reading.
 
 Everything you change is stored in *your* browser only. That is a real limitation: see below.
 
 ### Adding more photos properly
-Drop the files in `web/images/`, then add an entry to `web/assets/data.js`. The `crop` field is a percentage rectangle `{x, y, w, h}` of the source file, so phone screenshots can have their UI chrome cropped away without editing the image.
+Drop the files in `web/images/`, then add an entry to `web/assets/data.js`. The `crop` field is a percentage rectangle `[x, y, w, h]` of the source file, so phone screenshots can have their UI chrome cropped away without editing the image.
 
 ### About collaboration
-This board is static, so your friends cannot edit the same copy. **Use a shared Pinterest board for collecting and this board for deciding**: the "Link a shared board…" button stores that URL. Rationale is in the discussion notes; short version: collecting is divergent and belongs somewhere everyone already has an account, deciding is convergent and benefits from the opinionated structure here.
+This board is static, so your friends cannot edit the same copy. Use a shared Pinterest board for collecting and this one for deciding: collecting is divergent and belongs somewhere everyone already has an account, deciding is convergent and benefits from the opinionated structure here. Export and send the JSON when you want someone to see your exact arrangement.
 
 ---
 
@@ -37,6 +50,8 @@ This board is static, so your friends cannot edit the same copy. **Use a shared 
 | [03-test-run-plan.md](docs/03-test-run-plan.md) | The two test shoots: light times, run of show, locations, four looks, what to measure |
 | [04-shoot-checklist.md](docs/04-shoot-checklist.md) | Everything to pack for an outdoor autumn shoot |
 | [05-props-and-wardrobe.md](docs/05-props-and-wardrobe.md) | What to rent, what to buy, rough budget |
+
+Both research reports also read in the browser, on the **Market research** tab of the [live site](https://southocean.github.io/Photoshoot/).
 
 ---
 
@@ -55,6 +70,7 @@ This board is static, so your friends cannot edit the same copy. **Use a shared 
 - [x] Mood board built from the first 10 references
 - [x] Market research, first pass
 - [x] Test run plan with computed light times
+- [x] Published at [southocean.github.io/Photoshoot](https://southocean.github.io/Photoshoot/)
 - [ ] Scout locations at shoot-hour
 - [ ] Book model + wardrobe rental
 - [ ] Landing page (hosting still being decided)
